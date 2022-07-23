@@ -11,6 +11,7 @@ pygame.init()
 # ----------------------------------- Setup  ---------------------------------
 # Creates a window with the size 500 by 800 pixels
 window = pygame.display.set_mode((500, 800))
+pygame.display.set_caption("Demo Game!")
 
 # Creates a clock, which will be used to set our framerate
 clock = pygame.time.Clock()
