@@ -19,22 +19,11 @@ window = pygame.display.set_mode((500, 800))
 # Creates a clock, which will be used to set our framerate
 clock = pygame.time.Clock()
 
-# Time passed in game
-game_time = 0
-
-# Game state controls what is happening in our game
-game_state = "start"
-
-# ---------------------------- Fonts ------------------------------
-font = pygame.font.SysFont("arial", 50, bold=True)
-
-start_text = font.render("Press Space To Start!", True, "white")
-
 # -------------------------------- Game Objects ---------------------------------
 # We make a new player here
 player = Player((250, 700), (20, 50))
 
-boxes: list[Box] = []
+boxes = []
 box_spawn_timer = 0
 box_spawn_cooldown = 0.5
 
@@ -69,12 +58,6 @@ while running:
 			if event.key == pygame.K_ESCAPE:
 				running = False
 
-			if game_state == "start" and event.key == pygame.K_SPACE:
-				game_state = "game"
-
-				boxes.clear()
-				box_spawn_cooldown = 0.5
-
 	# -------------------------- Updates ---------------------------------
 	# Spawns in boxes if it can, otherwise count down the time
 	if box_spawn_timer <= 0:
@@ -87,43 +70,23 @@ while running:
 	else:
 		box_spawn_timer -= clock.get_time() / 1000
 
+	# Updates our player
+	player.update()
+
 	# Updates boxes
 	for box in boxes:
 		box.update()
-
-		if game_state == "game":
-			if box.rect.collidepoint(player.rect.centerx, player.rect.centery):
-				game_state = "end"
-
-	if game_state == "game":
-		game_time += clock.get_time() / 1000
-
-		# Updates our player
-		player.update()
 
 	# -------------------------- Drawing ---------------------------------
 	# Fills the background with "light blue"
 	window.fill("light blue")
 
-	if game_state == "start":
-		# Draws boxes
-		for box in boxes:
-			box.draw()
+	# Draws out player in front of the background
+	player.draw()
 
-		window.blit(start_text, (250 - start_text.get_width() / 2, 150))
-	elif game_state == "game":
-		# Draws out player in front of the background
-		player.draw()
-
-		# Draws boxes
-		for box in boxes:
-			box.draw()
-
-		rendered_time = font.render(f"{round(game_time, ndigits=2)}", True, "white")
-		window.blit(rendered_time, (10, 10))
-	elif game_state == "end":
-		end_text = font.render(f"Your score was {round(game_time)}!", True, "white")
-		window.blit(end_text, (250 - end_text.get_width() / 2, 150))
+	# Draws boxes
+	for box in boxes:
+		box.draw()
 
 	# Updates our display, to make sure everything we draw shows up
 	pygame.display.update()

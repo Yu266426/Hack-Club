@@ -17,7 +17,7 @@ clock = pygame.time.Clock()
 
 # -------------------------------- Game Objects ---------------------------------
 # We make a new player here
-player = Player((250, 700), (30, 70))
+player = Player((250, 700), (20, 50))
 
 # --------------------------------------- Game Loop --------------------------------
 # Our main game loop, runs only when "running" is true
@@ -36,6 +36,12 @@ while running:
 			# Set running to False, which ends our game loop
 			running = False
 
+		# If a key is pressed down
+		if event.type == pygame.KEYDOWN:
+			# If the key is escape, quit the game
+			if event.key == pygame.K_ESCAPE:
+				running = False
+
 	# -------------------------- Updates ---------------------------------
 	# Updates our player
 	player.update()
@@ -49,3 +55,5 @@ while running:
 
 	# Updates our display, to make sure everything we draw shows up
 	pygame.display.update()
+
+pygame.quit()

@@ -30,9 +30,17 @@ while running:
 			# Set running to False, which ends our game loop
 			running = False
 
+		# If a key is pressed down
+		if event.type == pygame.KEYDOWN:
+			# If the key is escape, quit the game
+			if event.key == pygame.K_ESCAPE:
+				running = False
+
 	# -------------------------- Drawing ---------------------------------
 	# Fills the background with "light blue"
 	window.fill("light blue")
 
 	# Updates our display, to make sure everything we draw shows up
 	pygame.display.update()
+
+pygame.quit()
