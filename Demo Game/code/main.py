@@ -76,6 +76,14 @@ while running:
 				boxes.clear()
 				box_spawn_cooldown = 0.5
 
+			elif game_state == "end" and event.key == pygame.K_SPACE:
+				game_state = "game"
+
+				boxes.clear()
+				box_spawn_cooldown = 0.5
+
+				game_time = 0
+
 	# -------------------------- Updates ---------------------------------
 	# Spawns in boxes if it can, otherwise count down the time
 	if box_spawn_timer <= 0:

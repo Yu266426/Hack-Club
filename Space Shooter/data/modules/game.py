@@ -20,6 +20,8 @@ class Game:
 	def __init__(self):
 		self.is_running = True
 		self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+		pygame.display.set_caption("Space Shooter")
+		pygame.display.set_icon(pygame.image.load(os.path.join(ASSET_DIR, "player.png")).convert_alpha())
 		self.clock = pygame.time.Clock()
 
 		self.game_state = GameStates.Start
@@ -83,11 +85,12 @@ class Game:
 						self.reset()
 
 		mouse_pressed = pygame.mouse.get_pressed()
-		if mouse_pressed[0]:
-			if self.player.alive and self.player_shoot_timer.done():
-				self.fire_sound.play()
-				self.lasers.append(Laser(self.player.pos + get_angled_offset(self.player.image.angle, 25), self.player.image.angle))
-				self.player_shoot_timer.start()
+		if self.game_state == GameStates.Game:
+			if mouse_pressed[0]:
+				if self.player.alive and self.player_shoot_timer.done():
+					self.fire_sound.play()
+					self.lasers.append(Laser(self.player.pos + get_angled_offset(self.player.image.angle, 25), self.player.image.angle))
+					self.player_shoot_timer.start()
 
 	def spawn_particles(self, amount_range, pos, radius, type, direction=None):
 		amount = random.randint(amount_range[0], amount_range[1])
@@ -232,7 +235,7 @@ class Game:
 		self.clock.tick()
 		delta = self.clock.get_time() / 1000 * 60
 
-		pygame.display.set_caption(f"fps: {round(self.clock.get_fps())}")
+		pygame.display.set_caption(f"Space Shooter: {round(self.clock.get_fps())}")
 
 		self.screen_shake = max(0.0, self.screen_shake - delta / 60)
 
