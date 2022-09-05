@@ -11,15 +11,18 @@ class Box:
 		# Generates random speed
 		self.speed = random.randint(7, 14)
 
+		self.pos = pygame.Vector2(spawn_pos)
+
 		# Similar to player, with image defaulting to black
 		self.image = pygame.Surface(size)
-		self.rect = self.image.get_rect(center=spawn_pos)
+		self.rect = self.image.get_rect(center=self.pos)
 
 		# Gets display
 		self.display = pygame.display.get_surface()
 
-	def update(self):
-		self.rect.y += self.speed
+	def update(self, delta):
+		self.pos.y += self.speed * delta
+		self.rect.center = self.pos
 
 	def draw(self):
 		self.display.blit(self.image, self.rect)

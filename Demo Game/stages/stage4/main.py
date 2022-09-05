@@ -84,6 +84,8 @@ while running:
 
 				game_time = 0
 
+				player.rect.x = 250
+
 	# -------------------------- Updates ---------------------------------
 	# Spawns in boxes if it can, otherwise count down the time
 	if box_spawn_timer <= 0:
