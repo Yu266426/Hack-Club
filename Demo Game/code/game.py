@@ -10,7 +10,7 @@ class Game:
 	def __init__(self):
 		self.is_running = True
 
-		self.window = pygame.display.set_mode((500, 800))
+		self.window = pygame.display.set_mode((500, 800), flags=pygame.SCALED | pygame.FULLSCREEN)
 		pygame.display.set_caption("Demo Game!")
 
 		self.clock = pygame.time.Clock()
