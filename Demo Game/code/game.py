@@ -70,7 +70,7 @@ class Game:
 						with open(LEADERBOARD_PATH) as file:
 							data = json.load(file)
 
-						data[self.text_input.text] = round(self.game_time, 2)
+						data[self.text_input.text.lower()] = round(self.game_time, 2)
 
 						with open(LEADERBOARD_PATH, "w") as file:
 							file.write(json.dumps(data))
