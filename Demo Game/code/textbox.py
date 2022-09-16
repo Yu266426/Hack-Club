@@ -65,9 +65,13 @@ class TextBox:
 
 		rendered_text = self.font.render(self.text, (255, 255, 255))
 		text_image: pygame.Surface = rendered_text[0].convert_alpha()
+		text_rect: pygame.Rect = rendered_text[1]
 
 		text_surf = pygame.Surface((self.rect.width - 10, self.rect.height), flags=pygame.SRCALPHA)
 		text_surf.blit(text_image, (0, 0))
 		text_surf.convert_alpha()
 
 		surface.blit(text_surf, (self.rect.left + 5, self.rect.top + 7))
+
+		if self.selected:
+			pygame.draw.rect(surface, "white", pygame.Rect(self.rect.left + text_rect.width + 10, self.rect.top + self.rect.height * 0.05, 10, self.rect.height * 0.8))
