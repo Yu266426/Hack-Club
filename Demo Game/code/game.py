@@ -70,7 +70,13 @@ class Game:
 						with open(LEADERBOARD_PATH) as file:
 							data = json.load(file)
 
-						data[self.text_input.text.lower().strip()] = round(self.game_time, 2)
+						name = self.text_input.text.lower().strip()
+						time = round(self.game_time, 2)
+
+						if name in data:
+							time = max(time, data[name])
+
+						data[name] = time
 
 						with open(LEADERBOARD_PATH, "w") as file:
 							file.write(json.dumps(data))
@@ -83,15 +89,14 @@ class Game:
 						self.text_input.text = ""
 						self.text_input.selected = False
 
-					if not self.text_active:
-						if pygame.key.get_mods() & pygame.KMOD_CTRL and event.key == pygame.K_SPACE:
-							self.game_state = "start"
+					if pygame.key.get_mods() & pygame.KMOD_CTRL and event.key == pygame.K_SPACE:
+						self.game_state = "start"
 
-							self.boxes.clear()
-							self.box_spawn_cooldown = 0.5
+						self.boxes.clear()
+						self.box_spawn_cooldown = 0.5
 
-							self.text_input.text = ""
-							self.text_input.selected = False
+						self.text_input.text = ""
+						self.text_input.selected = False
 
 	def update(self):
 		self.clock.tick()
@@ -114,6 +119,7 @@ class Game:
 			if self.game_state == "game":
 				if box.rect.collidepoint(self.player.rect.centerx, self.player.rect.centery):
 					self.game_state = "end"
+					self.text_input.selected = True
 
 		if self.game_state == "game":
 			self.game_time += delta / 60
