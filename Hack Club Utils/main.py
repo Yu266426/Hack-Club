@@ -7,12 +7,21 @@ class App:
 
 		self.commands = {
 			"quit": self.quit,
+			"q": self.quit,
 			"list": self.list,
+			"l": self.list,
 			"update_emails": self.update_emails,
+			"ue": self.update_emails,
 			"add_override": self.add_email_override,
+			"ao": self.add_email_override,
 			"remove_override": self.remove_email_override,
+			"ro": self.remove_email_override,
 			"add_member": self.add_member,
-			"remove_member": self.remove_member
+			"am": self.add_member,
+			"remove_member": self.remove_member,
+			"rm": self.remove_member,
+			"find_member": self.find_member,
+			"fm": self.find_member
 		}
 
 	# * Functions
@@ -106,6 +115,16 @@ class App:
 				file.write(json.dumps(data))
 		else:
 			print("Member does not exist")
+
+	@staticmethod
+	def find_member(name: str):
+		with open("hack_club_members.json") as file:
+			data = json.load(file)
+
+		if name in data["members"]:
+			print(f"{name} is a member")
+		else:
+			print(f"{name} is not a member")
 
 	# * Update
 	def update(self):
