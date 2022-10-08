@@ -19,7 +19,7 @@ from data.modules.utils import get_angled_offset, get_angle_to
 class Game:
 	def __init__(self):
 		self.is_running = True
-		self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+		self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags=pygame.SCALED, vsync=1)
 		pygame.display.set_caption("Space Shooter")
 		pygame.display.set_icon(pygame.image.load(os.path.join(ASSET_DIR, "player.png")).convert_alpha())
 		self.clock = pygame.time.Clock()
