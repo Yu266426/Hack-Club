@@ -1,1 +1,1 @@
-This is the repo for Hack Club Heads
+A github repository for Hack Club!
