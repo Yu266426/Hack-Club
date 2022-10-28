@@ -12,7 +12,7 @@ player = player.Player((250, 600))
 # Game loop
 is_running = True
 while is_running:
-	clock.tick(60)
+	clock.tick(60)  # Keeps our game at 60 FPS
 
 	for event in pygame.event.get():  # Loops through all events
 		if event.type == pygame.QUIT:
