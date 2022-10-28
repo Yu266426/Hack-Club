@@ -92,13 +92,13 @@ class Game:
 					self.lasers.append(Laser(self.player.pos + get_angled_offset(self.player.image.angle, 25), self.player.image.angle))
 					self.player_shoot_timer.start()
 
-	def spawn_particles(self, amount_range, pos, radius, type, direction=None):
+	def spawn_particles(self, amount_range, pos, radius, particle_type, direction=None):
 		amount = random.randint(amount_range[0], amount_range[1])
 		for _ in range(amount):
 			spawn_pos = pygame.Vector2(pos)
 			spawn_pos += get_angled_offset(random.randint(0, 360), random.randint(0, radius))
 
-			self.particles.append(Particle(type, spawn_pos, direction=direction))
+			self.particles.append(Particle(particle_type, spawn_pos, direction=direction))
 
 	def spawn_asteroids(self):
 		if self.asteroid_spawn_timer.done():

@@ -1,12 +1,19 @@
 import pygame
 
+import player
+
 pygame.init()  # Initializes pygame
 
-window = pygame.display.set_mode((800, 800))
+window = pygame.display.set_mode((500, 800))
+clock = pygame.time.Clock()
+
+player = player.Player((250, 600))
 
 # Game loop
 is_running = True
 while is_running:
+	clock.tick(60)
+
 	for event in pygame.event.get():  # Loops through all events
 		if event.type == pygame.QUIT:
 			is_running = False
@@ -15,7 +22,11 @@ while is_running:
 			if event.key == pygame.K_ESCAPE:
 				is_running = False
 
-	window.fill("dark blue")  # Make the background blue
+	player.update()
+
+	window.fill("light blue")  # Make the background blue
+
+	player.draw(window)
 
 	pygame.display.update()  # Update our display to show changes
 

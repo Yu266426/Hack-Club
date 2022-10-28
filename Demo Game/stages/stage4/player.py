@@ -5,7 +5,7 @@ import pygame
 class Player:
 	def __init__(self, pos, size):
 		# Basic info
-		self.x_movement = 0
+		self.x_input = 0
 		self.speed = 7
 
 		# Creates a surface at the size we specified
@@ -23,14 +23,14 @@ class Player:
 		keys_pressed = pygame.key.get_pressed()
 
 		# Checks to see left or right movement, with a little logic to shorten things
-		self.x_movement = keys_pressed[pygame.K_d] - keys_pressed[pygame.K_a]
+		self.x_input = keys_pressed[pygame.K_d] - keys_pressed[pygame.K_a]
 
 	def update(self):
 		# Gets our input
 		self.get_input()
 
 		# Moves our rect
-		self.rect.x += self.x_movement * self.speed
+		self.rect.x += self.x_input * self.speed
 
 		# Wraps our player around to the other side of the screen
 		# If we are to the left of the screen

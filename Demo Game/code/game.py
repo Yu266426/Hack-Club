@@ -32,8 +32,6 @@ class Game:
 		self.box_spawn_timer = 0
 		self.box_spawn_cooldown = 0.5
 
-		self.text_active = False
-
 		self.name_input_text = self.medium_font.render("Type in your name! Eg. Tiger Zhang", True, (5, 68, 94))
 		self.text_input = TextBox((self.window.get_width() / 2, 500), (400, 50))
 
@@ -128,9 +126,7 @@ class Game:
 
 		if self.game_state == "end":
 			self.text_input.update()
-
-			self.text_active = self.text_input.selected
-
+		
 	def draw(self):
 		self.window.fill((173, 216, 230))
 
