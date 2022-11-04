@@ -1,13 +1,16 @@
 import pygame
 
-import player
+from box import Box
+from player import Player
 
 pygame.init()  # Initializes pygame
 
 window = pygame.display.set_mode((500, 800))
 clock = pygame.time.Clock()
 
-player = player.Player((250, 600))
+player = Player((250, 600))
+
+box = Box()
 
 # Game loop
 is_running = True
@@ -23,9 +26,11 @@ while is_running:
 				is_running = False
 
 	player.update()
+	box.update()
 
 	window.fill("light blue")  # Make the background blue
 
+	box.draw(window)
 	player.draw(window)
 
 	pygame.display.update()  # Update our display to show changes
