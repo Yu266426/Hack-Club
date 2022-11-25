@@ -5,7 +5,7 @@ import pygame
 
 class Box:
 	def __init__(self):
-		self.speed = 15
+		self.speed = random.randint(10, 20)
 
 		self.image = pygame.Surface((random.randint(30, 70), random.randint(50, 100)))
 		self.image.fill("black")

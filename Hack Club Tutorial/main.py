@@ -8,11 +8,22 @@ pygame.init()  # Initializes pygame
 window = pygame.display.set_mode((500, 800))
 clock = pygame.time.Clock()
 
+game_state = "game"
+
 player = Player((250, 600))
 
 boxes = []
 box_spawn_time = 0
 box_cooldown = 30
+
+font = pygame.font.SysFont("arial", 70)
+end_text = font.render("Game Over!", True, "white")
+score_text = font.render("0", True, "white")
+
+time_text = font.render("0", True, "white")
+
+end_time = 0
+restart_time = 0
 
 # Game loop
 is_running = True
@@ -28,31 +39,60 @@ while is_running:
 				is_running = False
 
 			if event.key == pygame.K_SPACE:
-				boxes.append(Box())
+				if game_state == "end":
+					game_state = "restart"
+					restart_time = pygame.time.get_ticks() / 1000
 
-	box_spawn_time -= 1
-	if box_spawn_time <= 0:
-		boxes.append(Box())
+	if game_state == "game":
+		box_spawn_time -= 1
+		if box_spawn_time <= 0:
+			boxes.append(Box())
 
-		box_spawn_time = box_cooldown
+			box_spawn_time = box_cooldown
 
-		if box_cooldown > 5:
-			box_cooldown *= 0.85
+			if box_cooldown > 5:
+				box_cooldown *= 0.85
 
-	player.update()
+		player.update()
 
-	for box in boxes:
-		box.update()
+		for box in boxes:
+			box.update()
 
-		if box.rect.top > 800:
-			boxes.remove(box)
+			if box.rect.collidepoint(player.rect.midtop):
+				end_time = round(pygame.time.get_ticks() / 1000 - restart_time)
+				score_text = font.render(f"You Got {end_time}!", True, "white")
+
+				game_state = "end"
+
+			if box.rect.top > 800:
+				boxes.remove(box)
+
+		time_text = font.render(f"{round(pygame.time.get_ticks() / 1000 - restart_time, 1)}", True, "white")
+
+	elif game_state == "restart":
+		boxes.clear()
+		box_spawn_time = 0
+		box_cooldown = 30
+
+		player = Player((250, 600))
+
+		end_time = 0
+
+		game_state = "game"
 
 	window.fill("light blue")  # Make the background blue
 
-	for box in boxes:
-		box.draw(window)
+	if game_state == "game":
+		for box in boxes:
+			box.draw(window)
 
-	player.draw(window)
+		player.draw(window)
+
+		window.blit(time_text, (20, 20))
+
+	if game_state == "end":
+		window.blit(end_text, (250 - end_text.get_width() / 2, 200))
+		window.blit(score_text, (250 - score_text.get_width() / 2, 300))
 
 	pygame.display.update()  # Update our display to show changes
 
