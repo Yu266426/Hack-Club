@@ -16,14 +16,13 @@ boxes = []
 box_spawn_time = 0
 box_cooldown = 30
 
-font = pygame.font.SysFont("arial", 70)
-end_text = font.render("Game Over!", True, "white")
+font = pygame.font.SysFont("arial", 70)  # Loads the font
+end_text = font.render("Game Over!", True, "white")  # "renders" font into an image <Surface>
 score_text = font.render("0", True, "white")
 
 time_text = font.render("0", True, "white")
 
-end_time = 0
-restart_time = 0
+restart_time = 0  # Subtracts from the current time so that 0 is the time at the start of the game
 
 # Game loop
 is_running = True
@@ -44,6 +43,7 @@ while is_running:
 					restart_time = pygame.time.get_ticks() / 1000
 
 	if game_state == "game":
+		# Box spawning
 		box_spawn_time -= 1
 		if box_spawn_time <= 0:
 			boxes.append(Box())
@@ -55,18 +55,22 @@ while is_running:
 
 		player.update()
 
+		# Box updating
 		for box in boxes:
 			box.update()
 
+			# If box collides with the middle top of the player
 			if box.rect.collidepoint(player.rect.midtop):
 				end_time = round(pygame.time.get_ticks() / 1000 - restart_time)
 				score_text = font.render(f"You Got {end_time}!", True, "white")
 
 				game_state = "end"
+				break  # Breaks out of for loop, as no further boxes need to be processed
 
 			if box.rect.top > 800:
 				boxes.remove(box)
 
+		# Updates the timer displayed to the player
 		time_text = font.render(f"{round(pygame.time.get_ticks() / 1000 - restart_time, 1)}", True, "white")
 
 	elif game_state == "restart":
