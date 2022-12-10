@@ -1,4 +1,4 @@
-import pygame.display
+import pygame
 
 from data.modules.player import Player
 
@@ -17,6 +17,7 @@ class Game:
 				self.is_running = False
 
 	def update(self):
+		# Limits FPS to 60
 		self.clock.tick(60)
 
 		self.player.update()
