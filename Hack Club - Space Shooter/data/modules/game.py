@@ -6,10 +6,10 @@ from data.modules.player import Player
 class Game:
 	def __init__(self):
 		self.is_running = True
-		self.window = pygame.display.set_mode((800, 800))
+		self.window = pygame.display.set_mode((800, 800))  # Sets the screen to 800 by 800 pixels
 		self.clock = pygame.time.Clock()
 
-		self.player = Player((400, 400))
+		self.player = Player((400, 400))  # Initializes a player at 400, 400
 
 	def handle_events(self):
 		for event in pygame.event.get():
