@@ -1,5 +1,7 @@
 import pygame
 
+from data.modules.image import Image
+
 
 class Player:
 	def __init__(self, pos):
@@ -11,12 +13,11 @@ class Player:
 		# Input is also a vector, for conveniences in adding or multiplying with other values
 		self.input = pygame.Vector2()
 
-		# Make a surface, and fill it with red
-		self.image = pygame.Surface((60, 60))
-		self.image.fill("red")
+		# Make an image
+		self.image = Image("player", 5, 45)
 
 		# Rect from our image
-		self.rect = self.image.get_rect(center=self.pos)
+		self.rect = self.image.get_rect(self.pos)
 
 	def update(self):
 		keys_pressed = pygame.key.get_pressed()  # Gets all the keys pressed
@@ -51,5 +52,6 @@ class Player:
 			self.rect.bottom = 0
 			self.pos = self.rect.center
 
+	# `window: pygame.Surface` is called type hinting. It allows your IDE (pycharm in this case) to give you better autocompletion and error checking
 	def draw(self, window: pygame.Surface):
-		window.blit(self.image, self.rect)
+		self.image.draw(window, self.pos)
