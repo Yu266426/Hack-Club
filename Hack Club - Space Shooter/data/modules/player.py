@@ -38,8 +38,6 @@ class Player:
 		# Subtract a portion of velocity, to simulate drag
 		self.velocity -= self.velocity * self.drag
 
-		# Modifies self.pos with the input * speed (5 in this case)
-		# Feature of Vector2, where both (x, y) is modified by the multiplication, and can be added to self.pos
 		self.pos += self.velocity
 
 		# Adjusts self.rect.center to be self.pos
