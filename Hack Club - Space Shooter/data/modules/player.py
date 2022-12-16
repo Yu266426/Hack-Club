@@ -51,16 +51,16 @@ class Player:
 			# We need to re-update our position, so we set it to the center of the newly updated rect
 			# We need to repeat this for every following if statement, because rect stores values as integers, while our position is in floats
 			# If we do this outside of the if statement, we would lose precision every frame (Going from decimals to no decimals).
-			self.pos = self.rect.center
+			self.pos.update(self.rect.center)
 		elif self.rect.left > 800:
 			self.rect.right = 0
-			self.pos = self.rect.center
+			self.pos.update(self.rect.center)
 		if self.rect.bottom < 0:
 			self.rect.top = 800
-			self.pos = self.rect.center
+			self.pos.update(self.rect.center)
 		elif self.rect.top > 800:
 			self.rect.bottom = 0
-			self.pos = self.rect.center
+			self.pos.update(self.rect.center)
 
 	def draw(self, window: pygame.Surface):
 		window.blit(self.image, self.rect)
