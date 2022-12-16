@@ -11,6 +11,13 @@ class Player:
 		# Input is also a vector, for conveniences in adding or multiplying with other values
 		self.input = pygame.Vector2()
 
+		# Variables for easily changing our speed
+		self.speed = 0.7
+		self.drag = 0.1
+
+		# Player velocity, for saving movement from frame to frame
+		self.velocity = pygame.Vector2()
+
 		# Make a surface, and fill it with red
 		self.image = pygame.Surface((60, 60))
 		self.image.fill("red")
@@ -25,9 +32,15 @@ class Player:
 		self.input.x = keys_pressed[pygame.K_d] - keys_pressed[pygame.K_a]
 		self.input.y = keys_pressed[pygame.K_s] - keys_pressed[pygame.K_w]
 
+		# Add to velocity
+		self.velocity += self.input * self.speed
+
+		# Subtract a portion of velocity, to simulate drag
+		self.velocity -= self.velocity * self.drag
+
 		# Modifies self.pos with the input * speed (5 in this case)
 		# Feature of Vector2, where both (x, y) is modified by the multiplication, and can be added to self.pos
-		self.pos += self.input * 5
+		self.pos += self.velocity
 
 		# Adjusts self.rect.center to be self.pos
 		self.rect.center = self.pos
