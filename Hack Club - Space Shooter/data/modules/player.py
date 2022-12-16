@@ -1,3 +1,5 @@
+import math
+
 import pygame
 
 from data.modules.image import Image
@@ -52,16 +54,21 @@ class Player:
 			# We need to re-update our position, so we set it to the center of the newly updated rect
 			# We need to repeat this for every following if statement, because rect stores values as integers, while our position is in floats
 			# If we do this outside of the if statement, we would lose precision every frame (Going from decimals to no decimals).
-			self.pos = self.rect.center
+			self.pos.update(self.rect.center)
 		elif self.rect.left > 800:
 			self.rect.right = 0
-			self.pos = self.rect.center
+			self.pos.update(self.rect.center)
 		if self.rect.bottom < 0:
 			self.rect.top = 800
-			self.pos = self.rect.center
+			self.pos.update(self.rect.center)
 		elif self.rect.top > 800:
 			self.rect.bottom = 0
-			self.pos = self.rect.center
+			self.pos.update(self.rect.center)
+
+		# Point to mouse
+		mouse_pos = pygame.mouse.get_pos()
+		angle_to_mouse = math.degrees(math.atan2(-(mouse_pos[1] - self.pos.y), mouse_pos[0]- self.pos.x))
+		self.image.update_angle(angle_to_mouse)
 
 	# `window: pygame.Surface` is called type hinting. It allows your IDE (pycharm in this case) to give you better autocompletion and error checking
 	def draw(self, window: pygame.Surface):
