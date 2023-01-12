@@ -67,7 +67,7 @@ class Player:
 
 		# Point to mouse
 		mouse_pos = pygame.mouse.get_pos()
-		angle_to_mouse = math.degrees(math.atan2(-(mouse_pos[1] - self.pos.y), mouse_pos[0]- self.pos.x))
+		angle_to_mouse = math.degrees(math.atan2(-(mouse_pos[1] - self.pos.y), mouse_pos[0] - self.pos.x))
 		self.image.update_angle(angle_to_mouse)
 
 	# `window: pygame.Surface` is called type hinting. It allows your IDE (pycharm in this case) to give you better autocompletion and error checking

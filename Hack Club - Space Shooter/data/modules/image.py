@@ -21,5 +21,5 @@ class Image:
 		return self.base_image.get_rect(center=pos)
 
 	def draw(self, window: pygame.Surface, pos):
-		# Draw image centered on the center of the base image
+		# Draw image centered on center of the base image
 		window.blit(self.image, self.image.get_rect(center=self.get_rect(pos).center))
