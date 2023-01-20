@@ -9,7 +9,7 @@ class Image:
 	def __init__(self, name, scale, angle):
 		self.angle = angle
 
-		self.base_image = pygame.image.load(os.path.join(ASSET_DIR, f"{name}.png"))
+		self.base_image = pygame.image.load(os.path.join(ASSET_DIR, f"{name}.png")).convert_alpha()
 		self.base_image = pygame.transform.scale(self.base_image, (self.base_image.get_width() * scale, self.base_image.get_height() * scale))
 		self.image = pygame.transform.rotate(self.base_image, self.angle)
 
