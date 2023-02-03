@@ -26,6 +26,26 @@ class Player:
 		# Rect from our image
 		self.rect = self.image.get_rect(self.pos)
 
+	def keep_on_screen(self):
+		# If player goes off the edge of the screen, loop back around
+		if self.rect.right < 0:
+			# Sets the left of the player to the right of the screen, so we are just barely off-screen
+			self.rect.left = 800
+
+			# We need to re-update our position, so we set it to the center of the newly updated rect
+			# We need to repeat this for every following if statement, because rect stores values as integers, while our position is in floats
+			# If we do this outside of the if statement, we would lose precision every frame (Going from decimals to no decimals).
+			self.pos.update(self.rect.center)
+		elif self.rect.left > 800:
+			self.rect.right = 0
+			self.pos.update(self.rect.center)
+		if self.rect.bottom < 0:
+			self.rect.top = 800
+			self.pos.update(self.rect.center)
+		elif self.rect.top > 800:
+			self.rect.bottom = 0
+			self.pos.update(self.rect.center)
+
 	def update(self):
 		keys_pressed = pygame.key.get_pressed()  # Gets all the keys pressed
 		# Sets input to 1 or -1 or 0 depending on what is pressed
@@ -44,24 +64,7 @@ class Player:
 		# Adjusts self.rect.center to be self.pos
 		self.rect.center = self.pos
 
-		# If player goes off the edge of the screen, loop back around
-		if self.rect.right < 0:
-			# Sets the left of the player to the right of the screen, so we are just barely off-screen
-			self.rect.left = 800
-
-			# We need to re-update our position, so we set it to the center of the newly updated rect
-			# We need to repeat this for every following if statement, because rect stores values as integers, while our position is in floats
-			# If we do this outside of the if statement, we would lose precision every frame (Going from decimals to no decimals).
-			self.pos = self.rect.center
-		elif self.rect.left > 800:
-			self.rect.right = 0
-			self.pos = self.rect.center
-		if self.rect.bottom < 0:
-			self.rect.top = 800
-			self.pos = self.rect.center
-		elif self.rect.top > 800:
-			self.rect.bottom = 0
-			self.pos = self.rect.center
+		self.keep_on_screen()
 
 	# `window: pygame.Surface` is called type hinting. It allows your IDE (pycharm in this case) to give you better autocompletion and error checking
 	def draw(self, window: pygame.Surface):
