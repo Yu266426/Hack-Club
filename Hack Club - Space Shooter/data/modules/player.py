@@ -25,24 +25,7 @@ class Player:
 		# Rect from our image
 		self.rect = self.image.get_rect(center=self.pos)
 
-	def update(self):
-		keys_pressed = pygame.key.get_pressed()  # Gets all the keys pressed
-		# Sets input to 1 or -1 or 0 depending on what is pressed
-		# 1 for right / down, -1 for left / up
-		self.input.x = keys_pressed[pygame.K_d] - keys_pressed[pygame.K_a]
-		self.input.y = keys_pressed[pygame.K_s] - keys_pressed[pygame.K_w]
-
-		# Add to velocity
-		self.velocity += self.input * self.speed
-
-		# Subtract a portion of velocity, to simulate drag
-		self.velocity -= self.velocity * self.drag
-
-		self.pos += self.velocity
-
-		# Adjusts self.rect.center to be self.pos
-		self.rect.center = self.pos
-
+	def keep_on_screen(self):
 		# If player goes off the edge of the screen, loop back around
 		if self.rect.right < 0:
 			# Sets the left of the player to the right of the screen, so we are just barely off-screen
@@ -61,6 +44,26 @@ class Player:
 		elif self.rect.top > 800:
 			self.rect.bottom = 0
 			self.pos.update(self.rect.center)
+
+	def update(self):
+		keys_pressed = pygame.key.get_pressed()  # Gets all the keys pressed
+		# Sets input to 1 or -1 or 0 depending on what is pressed
+		# 1 for right / down, -1 for left / up
+		self.input.x = keys_pressed[pygame.K_d] - keys_pressed[pygame.K_a]
+		self.input.y = keys_pressed[pygame.K_s] - keys_pressed[pygame.K_w]
+
+		# Add to velocity
+		self.velocity += self.input * self.speed
+
+		# Subtract a portion of velocity, to simulate drag
+		self.velocity -= self.velocity * self.drag
+
+		self.pos += self.velocity
+
+		# Adjusts self.rect.center to be self.pos
+		self.rect.center = self.pos
+
+		self.keep_on_screen()
 
 	def draw(self, window: pygame.Surface):
 		window.blit(self.image, self.rect)
