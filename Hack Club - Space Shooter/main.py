@@ -1,13 +1,22 @@
 import pygame
+from player import Player
 
-from data.modules.game import Game
-
-# Initializes pygame, to set up things that pygame needs
 pygame.init()
 
-# Creates a game object, and calls the run method.
-game = Game()
-game.run()
+screen = pygame.display.set_mode((800, 800))
 
-# Quits pygame
+player = Player()
+
+running = True
+while running:
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT:
+			running = False
+
+	screen.fill("blue")
+
+	player.draw(screen)
+
+	pygame.display.update()
+
 pygame.quit()
