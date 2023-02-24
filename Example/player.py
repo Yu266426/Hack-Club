@@ -1,27 +1,34 @@
 import pygame
 
+from images import PLAYER_IMAGE
+
 
 class Player:
 	def __init__(self):
 		self.pos = pygame.Vector2((400, 400))
 
-		self.image = pygame.Surface((40, 40))
-		self.image.fill("red")
+		self.image = PLAYER_IMAGE.convert_alpha()
+		self.image = pygame.transform.scale(self.image, (50, 50))
+
 		self.rect = self.image.get_rect(center=self.pos)
 
-		self.speed = 10
-		self.drag = 0.5
+		self.input = pygame.Vector2()
+
+		self.speed = 5
+		self.drag = 0.3
 
 		self.acceleration = pygame.Vector2()
 		self.velocity = pygame.Vector2()
 
 	def update(self):
 		keys = pygame.key.get_pressed()
-		x_input = keys[pygame.K_d] - keys[pygame.K_a]
-		y_input = keys[pygame.K_s] - keys[pygame.K_w]
+		self.input.x = keys[pygame.K_d] - keys[pygame.K_a]
+		self.input.y = keys[pygame.K_s] - keys[pygame.K_w]
 
-		self.acceleration.x = x_input * self.speed
-		self.acceleration.y = y_input * self.speed
+		if self.input.length() != 0:
+			self.input.normalize_ip()
+
+		self.acceleration = self.input * self.speed
 
 		self.velocity += self.acceleration
 		self.velocity -= self.velocity * self.drag
