@@ -1,3 +1,4 @@
+import json
 import os.path
 import random
 
@@ -6,12 +7,13 @@ import pygame.display
 from data.modules.asteroid import Asteroid
 from data.modules.bar import Bar
 from data.modules.constants import SCREEN_WIDTH, SCREEN_HEIGHT, GameStates, AsteroidTypes, ParticleTypes
-from data.modules.files import ASSET_DIR
+from data.modules.files import ASSET_DIR, LEADERBOARD_PATH
 from data.modules.laser import Laser
 from data.modules.particle import Particle
 from data.modules.player import Player
 from data.modules.star import Star
 from data.modules.text import Text
+from data.modules.textbox import TextBox
 from data.modules.timer import Timer
 from data.modules.utils import get_angled_offset, get_angle_to
 
@@ -19,7 +21,7 @@ from data.modules.utils import get_angled_offset, get_angle_to
 class Game:
 	def __init__(self):
 		self.is_running = True
-		self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags=pygame.SCALED, vsync=1)
+		self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags=pygame.SCALED | pygame.FULLSCREEN, vsync=1)
 		pygame.display.set_caption("Space Shooter")
 		pygame.display.set_icon(pygame.image.load(os.path.join(ASSET_DIR, "player.png")).convert_alpha())
 		self.clock = pygame.time.Clock()
@@ -35,7 +37,7 @@ class Game:
 		self.asteroids = []
 		self.particles = []
 
-		self.asteroid_spawn_timer = Timer(3, start_on=False)
+		self.asteroid_spawn_timer = Timer(2, start_on=False)
 
 		self.player = Player((self.scroll.x + SCREEN_WIDTH / 2, self.scroll.y + SCREEN_HEIGHT / 2))
 		self.player_shoot_timer = Timer(0.18)
@@ -54,12 +56,22 @@ class Game:
 		self.start_text = Text("Press Space To Start!", (SCREEN_WIDTH / 2, SCREEN_HEIGHT * 0.2), 60, "white")
 		self.health_bar = Bar((10, 10), (300, 50), (50, 50, 50), (50, 200, 50))
 		self.score_text = Text("", (SCREEN_WIDTH - 10, 10), 40, "white")
+
 		self.end_score_text = Text("Score: ", (SCREEN_WIDTH / 2, SCREEN_HEIGHT * 0.2), 60, "white")
-		self.end_restart_text = Text("Press Space To Restart", (SCREEN_WIDTH / 2, SCREEN_HEIGHT * 0.5), 40, "white")
+
+		self.end_name_text = Text("Click on the box to enter first and last name!", (SCREEN_WIDTH / 2, SCREEN_HEIGHT * 0.46), 30, (220, 220, 220))
+		self.end_textbox = TextBox((SCREEN_WIDTH / 2, SCREEN_HEIGHT * 0.6), (SCREEN_WIDTH * 0.8, SCREEN_HEIGHT * 0.1))
+
+		self.end_restart_text = Text("Press F1 To Restart", (SCREEN_WIDTH / 2, SCREEN_HEIGHT * 0.7), 40, "white")
 
 	def reset(self):
 		self.player = Player((self.scroll.x + SCREEN_WIDTH / 2, self.scroll.y - SCREEN_HEIGHT / 2))
 		self.score = 0
+
+		self.asteroid_spawn_timer.time = 3
+
+		self.end_textbox.selected = False
+		self.end_textbox.text = ""
 
 	def generate_stars(self, n_stars):
 		for _ in range(n_stars):
@@ -71,7 +83,7 @@ class Game:
 				self.is_running = False
 
 			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_ESCAPE:
+				if event.key == pygame.K_ESCAPE and pygame.key.get_mods() & pygame.KMOD_CTRL:
 					self.is_running = False
 
 				if self.game_state == GameStates.Start:
@@ -80,8 +92,28 @@ class Game:
 						self.reset()
 
 				if self.game_state == GameStates.End:
-					if event.key == pygame.K_SPACE:
-						self.game_state = GameStates.Game
+					if self.end_textbox.selected:
+						if self.end_textbox.write(event):
+							# Save to file
+							with open(LEADERBOARD_PATH) as file:
+								data = json.load(file)
+
+							name = self.end_textbox.text.lower().strip()
+							score = self.score
+
+							if name in data:
+								score = max(score, data[name])
+
+							data[name] = score
+
+							with open(LEADERBOARD_PATH, "w") as file:
+								file.write(json.dumps(data))
+
+							self.reset()
+							self.game_state = GameStates.Start
+
+					elif event.key == pygame.K_F1:
+						self.game_state = GameStates.Start
 						self.reset()
 
 		mouse_pressed = pygame.mouse.get_pressed()
@@ -112,10 +144,11 @@ class Game:
 
 					self.asteroids.append(Asteroid(AsteroidTypes.Large, pos, get_angle_to(pos, self.player.pos)))
 
-			self.asteroid_spawn_timer.time *= 0.95
+			self.asteroid_spawn_timer.time *= 0.90
 			if self.asteroid_spawn_timer.time < 0.3:
-				self.asteroid_spawn_timer.time = 3
+				self.asteroid_spawn_timer.time = 0.3
 			self.asteroid_spawn_timer.start()
+			print(self.asteroid_spawn_timer.time)
 
 	def game_update(self, delta):
 		self.scroll = self.scroll.lerp(self.player.pos - pygame.Vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), min(0.07 * delta, 1))
@@ -242,11 +275,16 @@ class Game:
 		for star in self.stars:
 			star.update(delta, self.scroll)
 
-		if self.game_state == GameStates.Start or self.game_state == GameStates.End:
+		if self.game_state == GameStates.Start:
 			self.scroll.x += 3 * delta
 
 		if self.game_state == GameStates.Game:
 			self.game_update(delta)
+
+		if self.game_state == GameStates.End:
+			self.scroll.x += 3 * delta
+
+			self.end_textbox.update()
 
 	def draw(self):
 		self.window.fill("black")
@@ -282,5 +320,7 @@ class Game:
 		if self.game_state == GameStates.End:
 			self.end_score_text.draw_centered(self.window)
 			self.end_restart_text.draw_centered(self.window)
+			self.end_name_text.draw_centered(self.window)
+			self.end_textbox.draw(self.window)
 
 		pygame.display.flip()
