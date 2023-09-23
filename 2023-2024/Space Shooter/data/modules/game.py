@@ -43,7 +43,7 @@ class Game:
 		self.player_shoot_timer = Timer(0.18)
 		self.player_trail_timer = Timer(0.02)
 
-		self.death_timer = Timer(6, start_on=False)
+		self.death_timer = Timer(4, start_on=False)
 
 		self.score = 0
 
@@ -144,11 +144,10 @@ class Game:
 
 					self.asteroids.append(Asteroid(AsteroidTypes.Large, pos, get_angle_to(pos, self.player.pos)))
 
-			self.asteroid_spawn_timer.time *= 0.90
-			if self.asteroid_spawn_timer.time < 0.3:
-				self.asteroid_spawn_timer.time = 0.3
+			self.asteroid_spawn_timer.time *= 0.92
+			if self.asteroid_spawn_timer.time < 0.35:
+				self.asteroid_spawn_timer.time = 0.35
 			self.asteroid_spawn_timer.start()
-			print(self.asteroid_spawn_timer.time)
 
 	def game_update(self, delta):
 		self.scroll = self.scroll.lerp(self.player.pos - pygame.Vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), min(0.07 * delta, 1))
@@ -263,6 +262,7 @@ class Game:
 		if not self.player.alive and self.death_timer.done() and len(self.asteroids) == 0:
 			self.end_score_text.text = f"Score: {self.score}"
 			self.game_state = GameStates.End
+			self.end_textbox.selected = True
 
 	def update(self):
 		self.clock.tick()
