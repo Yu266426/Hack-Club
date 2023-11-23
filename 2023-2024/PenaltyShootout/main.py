@@ -1,15 +1,24 @@
 import pygame
 import math
 
+from goal import Goal
 from player import Player
 from ball import Ball
 
 screen = pygame.display.set_mode((600, 600))
 clock = pygame.Clock()
 
+background_image = pygame.image.load("grass.png")
+
+score = 0
+obstacles = [pygame.Rect(200, 400, 200, 40)]
+
+goal = Goal((300, 500))
+
 player = Player()
 
-ball = Ball((300, 400), (0, 0))
+ball = Ball((300, 350), (0, 0))
+is_in_goal = False
 
 running = True
 while running:
@@ -31,12 +40,26 @@ while running:
 
 	# Updating
 	player.move()
-	ball.update()
+	ball.update(obstacles)
+
+	# Ball is in goal
+	if not is_in_goal and goal.rect.collidepoint(ball.pos):
+		is_in_goal = True
+		score += 1
+		print(score)
+	elif not goal.rect.collidepoint(ball.pos):
+		is_in_goal = False
 
 	# Drawing
 	screen.fill("dark green")
+	screen.blit(background_image, (-50, -40))
 
 	player.draw(screen)
 	ball.draw(screen)
+
+	goal.draw(screen)
+
+	for obstacle in obstacles:
+		pygame.draw.rect(screen, "yellow", obstacle)
 
 	pygame.display.flip()

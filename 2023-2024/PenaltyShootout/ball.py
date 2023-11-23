@@ -17,19 +17,29 @@ class Ball:
 
 		self.velocity += direction_vector
 
-	def update(self):
+	def update(self, obstacles):
 		self.velocity -= self.velocity * 0.01
 
+		# X movement
 		self.pos.x += self.velocity.x
 		self.rect.center = self.pos
+
+		for obstacle in obstacles:
+			if self.rect.colliderect(obstacle):
+				self.velocity.x *= -1
 
 		if self.rect.left < 0:
 			self.velocity.x *= -1
 		if self.rect.right > 600:
 			self.velocity.x *= -1
 
+		# Y movement
 		self.pos.y += self.velocity.y
 		self.rect.center = self.pos
+
+		for obstacle in obstacles:
+			if self.rect.colliderect(obstacle):
+				self.velocity.y *= -1
 
 		if self.rect.top < 0:
 			self.velocity.y *= -1
