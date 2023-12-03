@@ -2,6 +2,7 @@ import pygame
 import math
 
 from goal import Goal
+from goalie import Goalie
 from player import Player
 from ball import Ball
 
@@ -11,14 +12,15 @@ clock = pygame.Clock()
 background_image = pygame.image.load("grass.png")
 
 score = 0
-obstacles = [pygame.Rect(200, 400, 200, 40)]
+goalie = Goalie(pygame.Rect(200, 400, 200, 40))
+obstacles = [goalie.rect, pygame.Rect(40, 400, 30, 200), pygame.Rect(530, 400, 30, 200)]
 
 goal = Goal((300, 500))
 
-player = Player()
-
-ball = Ball((300, 350), (0, 0))
+ball = Ball((300, 150), (0, 0))
 is_in_goal = False
+
+player = Player(ball.pos)
 
 running = True
 while running:
@@ -34,13 +36,14 @@ while running:
 
 		if event.type == pygame.MOUSEBUTTONDOWN:
 			if event.button == 1:
-				angle = math.degrees(math.atan2(ball.pos.y - event.pos[1], ball.pos.x - event.pos[0])) - 90
+				angle = player.angle + 180
 
 				ball.shoot_ball(angle, 10)
 
 	# Updating
-	player.move()
+	player.update()
 	ball.update(obstacles)
+	goalie.update()
 
 	# Ball is in goal
 	if not is_in_goal and goal.rect.collidepoint(ball.pos):

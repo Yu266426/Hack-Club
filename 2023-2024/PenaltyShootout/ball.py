@@ -26,6 +26,7 @@ class Ball:
 
 		for obstacle in obstacles:
 			if self.rect.colliderect(obstacle):
+				self.pos.x -= self.velocity.x
 				self.velocity.x *= -1
 
 		if self.rect.left < 0:
@@ -39,6 +40,7 @@ class Ball:
 
 		for obstacle in obstacles:
 			if self.rect.colliderect(obstacle):
+				self.pos.y -= self.velocity.y
 				self.velocity.y *= -1
 
 		if self.rect.top < 0:
