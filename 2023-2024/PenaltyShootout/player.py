@@ -10,6 +10,9 @@ class Player:
 		offset = pygame.Vector2(0, -80).rotate(self.angle)
 		self.pos = self.ball_pos + offset
 
+		self.image = pygame.transform.scale_by(pygame.image.load("player.png"), 0.6)
+		self.rect = self.image.get_rect(center=self.pos)
+
 	def update(self):
 		keys_pressed = pygame.key.get_pressed()
 		if keys_pressed[pygame.K_d]:
@@ -22,5 +25,10 @@ class Player:
 		offset = pygame.Vector2(0, -80).rotate(self.angle)
 		self.pos = self.ball_pos + offset
 
-	def draw(self, surface):
-		pygame.draw.circle(surface, "white", self.pos, 20)
+		self.rect.center = self.pos
+
+	def draw(self, surface: pygame.Surface):
+		# pygame.draw.circle(surface, "white", self.pos, 20)
+
+		image = pygame.transform.rotate(self.image, 180 - self.angle)
+		surface.blit(image, image.get_rect(center=self.rect.center))
