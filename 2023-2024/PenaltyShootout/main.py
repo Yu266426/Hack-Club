@@ -2,7 +2,7 @@ import pygame
 import math
 
 from goal import Goal
-from goalie import Goalie
+from obstacle import Goalie, Obstacle
 from player import Player
 from ball import Ball
 
@@ -12,15 +12,14 @@ clock = pygame.Clock()
 background_image = pygame.image.load("grass.png")
 
 score = 0
-goalie = Goalie(pygame.Rect(200, 400, 200, 40))
-obstacles = [goalie.rect, pygame.Rect(40, 400, 30, 200), pygame.Rect(530, 400, 30, 200)]
+obstacles = [Goalie(pygame.Rect(200, 400, 200, 100)), Obstacle(pygame.Rect(40, 400, 30, 200)), Obstacle(pygame.Rect(530, 400, 30, 200))]
 
 goal = Goal((300, 500))
 
-ball = Ball((300, 150), (0, 0))
+ball = Ball((300, 250), (0, 0))
 is_in_goal = False
 
-player = Player(ball.pos)
+player = Player(ball.rect.center)
 
 running = True
 while running:
@@ -43,14 +42,16 @@ while running:
 	# Updating
 	player.update()
 	ball.update(obstacles)
-	goalie.update()
+
+	for obstacle in obstacles:
+		obstacle.update()
 
 	# Ball is in goal
-	if not is_in_goal and goal.rect.collidepoint(ball.pos):
+	if not is_in_goal and goal.rect.collidepoint(ball.rect.center):
 		is_in_goal = True
 		score += 1
 		print(score)
-	elif not goal.rect.collidepoint(ball.pos):
+	elif not goal.rect.collidepoint(ball.rect.center):
 		is_in_goal = False
 
 	# Drawing
