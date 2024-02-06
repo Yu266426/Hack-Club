@@ -1,18 +1,22 @@
+import pathlib
+
 import pygame
+import pygbase
 
-import images
+from game import Game
 
-display = pygame.display.set_mode((800, 800))
+pygbase.init((800, 800))
 
-images.load_image("tileset")
+# Load assets
+CURRENT_DIR = pathlib.Path.cwd()
+ASSET_DIR = CURRENT_DIR / "assets"
 
-running = True
-while running:
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
-			running = False
+pygbase.add_sprite_sheet_resource("sprite_sheets", 1, str(ASSET_DIR / "sprite_sheets"), default_scale=5)
 
-	display.fill("blue")
-	display.blit(images.images["tileset"], (0, 0))
+# Quit when escape is pressed
+pygbase.EventManager.add_handler("all", pygame.KEYDOWN, lambda e: pygbase.EventManager.post_event(pygame.QUIT) if e.key == pygame.K_ESCAPE else ...)
 
-	pygame.display.update()
+app = pygbase.App(Game)
+app.run()
+
+pygbase.quit()

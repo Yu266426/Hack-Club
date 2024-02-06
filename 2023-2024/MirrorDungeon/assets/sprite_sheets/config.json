@@ -1,0 +1,26 @@
+{
+  "floor_tiles": {
+    "rows": 3,
+    "columns": 3,
+    "tile_width": 16,
+    "tile_height": 16,
+    "scale": 0,
+    "rotatable": false
+  },
+  "player_idle": {
+    "rows": 1,
+    "columns": 2,
+    "tile_width": 16,
+    "tile_height": 20,
+    "scale": 0,
+    "rotatable": false
+  },
+  "wall_tiles": {
+    "rows": 0,
+    "columns": 0,
+    "tile_width": 0,
+    "tile_height": 0,
+    "scale": -1,
+    "rotatable": false
+  }
+}
