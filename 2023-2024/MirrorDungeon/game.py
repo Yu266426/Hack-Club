@@ -13,7 +13,7 @@ class Game(pygbase.GameState, name="game"):
 
 		self.level = Level()
 
-		self.player = Player((400, 400))
+		self.player = Player((400, 400), self.level)
 
 	def update(self, delta: float):
 		self.player.update(delta)
