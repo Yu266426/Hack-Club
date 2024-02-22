@@ -24,13 +24,8 @@
     "rotatable": false
   },
   "wall_tiles": {
-<<<<<<< Updated upstream
-    "rows": 2,
-    "columns": 3,
-=======
     "rows": 4,
     "columns": 2,
->>>>>>> Stashed changes
     "tile_width": 16,
     "tile_height": 16,
     "scale": 0,

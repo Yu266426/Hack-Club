@@ -1,6 +1,6 @@
 import pygame
 import pygbase
-from pygbase.particles.particle_spawners import random
+import random
 
 from consts import TILE_SIZE
 from tile import Tile
@@ -8,52 +8,11 @@ from tile import Tile
 
 class Level:
 	def __init__(self):
-<<<<<<< Updated upstream
 		self.TILE_SIZE = 16 * 5
 
 		self.n_rows = 0
 		self.n_cols = 0
-		self.tiles: list[list[Tile]] = []
-
-		self.load()
-
-	def get_tile_pos(self, pos, offset=(0, 0)):
-		return int((pos.x + offset[0]) // self.TILE_SIZE), int((pos.y + offset[1]) // self.TILE_SIZE)
-
-	def check_bounds(self, tile_pos):
-		return 0 <= tile_pos[0] < self.n_cols and 0 <= tile_pos[1] < self.n_rows
-
-	def load(self):
-		tile_mapping = {
-			0: ("floor_tiles", 0, False),
-			1: ("wall_tiles", 0, True)
-		}
-
-		temp_map = [
-			[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-			[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-			[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-			[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-			[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-			[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-			[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-			[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		]
-
-		self.n_rows = len(temp_map)
-		self.n_cols = len(temp_map[0])
-
-		for row_index, row in enumerate(temp_map):
-			self.tiles.append([])
-			for col_index, tile in enumerate(row):
-				self.tiles[row_index].append(Tile((col_index * self.TILE_SIZE, row_index * self.TILE_SIZE), *tile_mapping[tile]))
-=======
-		self.num_rows = 0
-		self.num_cols = 0
-		self.tiles = [
-		    [],  # 0: floor
-		    []  # 1: wall
-		]
+		self.tiles: list[list[list[Tile | None]]] = [[], []]
 
 		self.load()
 
@@ -149,13 +108,13 @@ class Level:
 						gen_sum = 0
 						for _tile_type, gen_weight in floor_gen_settings.items():
 							gen_sum += gen_weight
-							
+
 							if random_value < default_floor_gen_chance + gen_sum:
 								tile_type = _tile_type
 								break
 
 				self.tiles[0][row_index].append(Tile((col_index * TILE_SIZE, row_index * TILE_SIZE), *tile_mapping[tile_type]))
-		
+
 		# Wall generation
 		for row_index, row in enumerate(temp_map[1]):
 			self.tiles[1].append([])
@@ -179,7 +138,6 @@ class Level:
 						tile_type = 23
 
 				self.tiles[1][row_index].append(Tile((col_index * TILE_SIZE, row_index * TILE_SIZE), *tile_mapping[tile_type]))
->>>>>>> Stashed changes
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		for layer in self.tiles:
