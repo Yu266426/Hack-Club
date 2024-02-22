@@ -3,7 +3,11 @@ import pygbase
 
 
 class Tile:
+<<<<<<< Updated upstream
 	def __init__(self, pos, name, index, collidable):
+=======
+	def __init__(self, pos: tuple, name: str, index: int, collidable: bool):
+>>>>>>> Stashed changes
 		self.rect = pygame.Rect(pos[0], pos[1], 16 * 5, 16 * 5)
 
 		self.sprite_sheet: pygbase.SpriteSheet = pygbase.ResourceManager.get_resource("sprite_sheets", name)
