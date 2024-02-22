@@ -1,5 +1,6 @@
 import pygame
 import pygbase
+from consts import PLAYER_HEIGHT, PLAYER_WIDTH
 
 from level import Level
 from player import Player
@@ -22,6 +23,7 @@ class Game(pygbase.GameState, name="game"):
 	def draw(self, surface: pygame.Surface):
 		surface.fill("black")
 
-		self.level.draw(surface, self.camera)
+		self.level.draw_layer(surface, self.camera, 0)
+		self.level.draw_layer_with_entites(surface, self.camera, 1, [self.player])
 
-		self.player.draw(surface, self.camera)
+		pygame.draw.rect(surface, "white",pygame.Rect(self.camera.world_to_screen((self.player.pos.x - PLAYER_WIDTH / 2, self.player.pos.y - PLAYER_HEIGHT)), (PLAYER_WIDTH, PLAYER_HEIGHT)))

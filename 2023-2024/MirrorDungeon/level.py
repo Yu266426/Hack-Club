@@ -3,15 +3,15 @@ import pygbase
 import random
 
 from consts import TILE_SIZE
-from tile import Tile
+from tile import Tile, TopWallTile
 
 
 class Level:
 	def __init__(self):
 		self.TILE_SIZE = 16 * 5
 
-		self.n_rows = 0
-		self.n_cols = 0
+		self.num_rows = 0
+		self.num_cols = 0
 		self.tiles: list[list[list[Tile | None]]] = [[], []]
 
 		self.load()
@@ -39,9 +39,16 @@ class Level:
 		    17: ("floor_tiles", 7, False),
 		    # 2 is used to mark procedural walls
 		    20: ("wall_tiles", 6, True),
-		    21: ("wall_alternates", 0, True),
-		    22: ("wall_alternates", 1, True),
-		    23: ("wall_alternates", 3, True)
+		    21: ("wall_tiles", 6, True, 0),
+		    22: ("wall_tiles", 0, True, 1),  # Top left
+		    23: ("wall_tiles", 1, True, 2),  # Top right
+		    24: ("wall_tiles", 2, True),  # Left
+		    25: ("wall_tiles", 3, True),  # Right
+		    26: ("wall_tiles", 4, True),  # Bottom left
+		    27: ("wall_tiles", 5, True),  # Bottom right
+		    28: ("wall_alternates", 0, True),
+		    29: ("wall_alternates", 1, True),
+		    210: ("wall_alternates", 3, True)
 		}
 
 		floor_gen_settings = {
@@ -72,11 +79,11 @@ class Level:
 		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
 		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
 		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+		  [2, 0, 2, 0, 0, 0, 0, 0, 0, 2],
 		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+		  [2, 0, 0, 0, 0, 0, 2, 2, 0, 2],
+		  [2, 2, 0, 0, 0, 0, 0, 0, 0, 2],
+		  [2, 2, 2, 0, 0, 0, 0, 0, 0, 2],
 		  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 		 ]
 		]  # yapf: disable
@@ -124,20 +131,85 @@ class Level:
 					continue
 
 				tile_type = tile
+				is_top_wall = False
 
 				if tile == 2:
-					random_value = random.random()
+					tile_type = 20
 
-					if random_value < 0.7:
-						tile_type = 20  # Regular wall
-					elif random_value < 0.8:
-						tile_type = 21  # Banner Red
-					elif random_value < 0.9:
-						tile_type = 22  # Banner Blue
-					else:
-						tile_type = 23
+					# TODO: Redo this using a strategy of
+					# marking adjacent tiles, then computing the wall type
+					#
+					# Potentially even precompute an adjacency map, then in the next pass compute tile type
+					mark_left_wall = 0
+					mark_right_wall = 0
 
-				self.tiles[1][row_index].append(Tile((col_index * TILE_SIZE, row_index * TILE_SIZE), *tile_mapping[tile_type]))
+					has_below = False
+
+					# Wall is on top
+					if row_index <= 0 or temp_map[1][row_index - 1][col_index] == 0:
+						is_top_wall = True
+
+					# Is left wall
+					if col_index <= 0:
+						mark_left_wall = 1  # Against edge of map
+					elif temp_map[1][row_index][col_index - 1] == 0:
+						mark_left_wall = 2  # No tile on left
+
+					# Is right wall
+					if col_index >= self.num_cols - 1:
+						mark_right_wall = 1  # Against edge of map
+					elif temp_map[1][row_index][col_index + 1] == 0:
+						mark_right_wall = 2  # No tile on right
+
+					# Has below
+					if row_index < self.num_rows - 1 and temp_map[1][row_index + 1][col_index]:
+						has_below = True
+
+					# Compute wall type
+					if is_top_wall:
+						tile_type = 21
+
+					if has_below:
+						if is_top_wall:
+							if mark_left_wall == 1 or (mark_left_wall == 2 and mark_right_wall == 0):
+								tile_type = 22
+							if mark_right_wall == 1 or (mark_right_wall == 2 and mark_left_wall == 0):
+								tile_type = 23
+						else:
+							if mark_left_wall != 0 and mark_right_wall == 2:
+								tile_type = 24
+							if mark_right_wall != 0 and mark_left_wall == 2:
+								tile_type = 25
+
+				print(tile_type, row_index, col_index)
+				if is_top_wall:
+					self.tiles[1][row_index].append(TopWallTile((col_index * TILE_SIZE, row_index * TILE_SIZE), *tile_mapping[tile_type]))
+				else:
+					self.tiles[1][row_index].append(Tile((col_index * TILE_SIZE, row_index * TILE_SIZE), *tile_mapping[tile_type]))
+
+	def draw_layer(self, surface: pygame.Surface, camera: pygbase.Camera, layer: int):
+		for row in self.tiles[layer]:
+			for tile in row:
+				if tile:
+					tile.draw(surface, camera)
+
+	def draw_layer_with_entites(self, surface: pygame.Surface, camera: pygbase.Camera, layer: int, entities: list):
+		# Sort entites
+		sorted_entities = sorted(entities, key=lambda e: e.pos.y * self.num_cols * self.TILE_SIZE + e.pos.x)
+
+		current_entity_index = 0
+		for row_index, row in enumerate(self.tiles[layer]):
+			for tile in row:
+				if tile:
+					tile.draw(surface, camera)
+
+			for entity in sorted_entities[current_entity_index:]:
+				if self.get_tile_pos(entity.pos)[1] != row_index:
+					break
+
+				entity.draw(surface, camera)
+
+				current_entity_index += 1
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		for layer in self.tiles:
