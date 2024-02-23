@@ -1,3 +1,4 @@
+from sre_constants import MARK
 import pygame
 import pygbase
 import random
@@ -40,15 +41,17 @@ class Level:
 		    # 2 is used to mark procedural walls
 		    20: ("wall_tiles", 6, True),
 		    21: ("wall_tiles", 6, True, 0),
-		    22: ("wall_tiles", 0, True, 1),  # Top left
-		    23: ("wall_tiles", 1, True, 2),  # Top right
-		    24: ("wall_tiles", 2, True),  # Left
-		    25: ("wall_tiles", 3, True),  # Right
-		    26: ("wall_tiles", 4, True),  # Bottom left
-		    27: ("wall_tiles", 5, True),  # Bottom right
-		    28: ("wall_alternates", 0, True),
-		    29: ("wall_alternates", 1, True),
-		    210: ("wall_alternates", 3, True)
+		    22: ("wall_tiles", 0, True),  # Top left
+		    23: ("wall_tiles", 0, True, 1),  # Top left
+		    24: ("wall_tiles", 1, True),  # Top right
+		    25: ("wall_tiles", 1, True, 2),  # Top right
+		    26: ("wall_tiles", 2, True),  # Left
+		    27: ("wall_tiles", 3, True),  # Right
+		    28: ("wall_tiles", 4, True),  # Bottom left
+		    29: ("wall_tiles", 5, True),  # Bottom right
+		    210: ("wall_alternates", 0, True),
+		    211: ("wall_alternates", 1, True),
+		    212: ("wall_alternates", 3, True)
 		}
 
 		floor_gen_settings = {
@@ -56,7 +59,6 @@ class Level:
 		    12: 0.02,
 		    13: 0.02,
 		    14: 0.02,
-		    15: 0.02,
 		    16: 0.02,
 		    17: 0.02,
 		}
@@ -78,10 +80,10 @@ class Level:
 		  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
 		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+		  [2, 0, 0, 0, 0, 0, 2, 2, 2, 2],
 		  [2, 0, 2, 0, 0, 0, 0, 0, 0, 2],
 		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-		  [2, 0, 0, 0, 0, 0, 2, 2, 0, 2],
+		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
 		  [2, 2, 0, 0, 0, 0, 0, 0, 0, 2],
 		  [2, 2, 2, 0, 0, 0, 0, 0, 0, 2],
 		  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
@@ -126,62 +128,205 @@ class Level:
 		for row_index, row in enumerate(temp_map[1]):
 			self.tiles[1].append([])
 			for col_index, tile in enumerate(row):
-				if tile == 0:
-					self.tiles[1][row_index].append(None)
-					continue
-
 				tile_type = tile
-				is_top_wall = False
+				is_top_wall = True
 
 				if tile == 2:
-					tile_type = 20
-
 					# TODO: Redo this using a strategy of
 					# marking adjacent tiles, then computing the wall type
 					#
 					# Potentially even precompute an adjacency map, then in the next pass compute tile type
-					mark_left_wall = 0
-					mark_right_wall = 0
+					mark_tile_top = 0
+					mark_tile_bottom = 0
+					mark_tile_left = 0
+					mark_tile_right = 0
 
-					has_below = False
+					mark_tile_top_left = 0
+					mark_tile_top_right = 0
+					mark_tile_bottom_left = 0
+					mark_tile_bottom_right = 0
 
-					# Wall is on top
-					if row_index <= 0 or temp_map[1][row_index - 1][col_index] == 0:
-						is_top_wall = True
+					# Has tile on top
+					if row_index > 0 and temp_map[1][row_index - 1][col_index] != 0:
+						is_top_wall = False
+						mark_tile_top = 1
+					elif row_index == 0:
+						mark_tile_top = 2
 
-					# Is left wall
-					if col_index <= 0:
-						mark_left_wall = 1  # Against edge of map
-					elif temp_map[1][row_index][col_index - 1] == 0:
-						mark_left_wall = 2  # No tile on left
+					# Has tile below
+					if row_index < self.num_rows - 1 and temp_map[1][row_index + 1][col_index] != 0:
+						mark_tile_bottom = 1
+					elif row_index == self.num_rows - 1:
+						mark_tile_bottom = 2
 
-					# Is right wall
-					if col_index >= self.num_cols - 1:
-						mark_right_wall = 1  # Against edge of map
-					elif temp_map[1][row_index][col_index + 1] == 0:
-						mark_right_wall = 2  # No tile on right
+					# Has tile to the left
+					if col_index > 0 and temp_map[1][row_index][col_index - 1] != 0:
+						mark_tile_left = 1
+					elif col_index == 0:
+						mark_tile_left = 2
 
-					# Has below
-					if row_index < self.num_rows - 1 and temp_map[1][row_index + 1][col_index]:
-						has_below = True
+					# Has tile to the right
+					if col_index < self.num_cols - 1 and temp_map[1][row_index][col_index + 1] != 0:
+						mark_tile_right = 1
+					elif col_index == self.num_cols - 1:
+						mark_tile_right = 2
 
-					# Compute wall type
-					if is_top_wall:
-						tile_type = 21
+					# Has tile top left
+					if row_index > 0 and col_index > 0 and temp_map[1][row_index - 1][col_index - 1] != 0:
+						mark_tile_top_left = 1
+					elif row_index == 0 and col_index == 0:
+						mark_tile_top_left = 2
 
-					if has_below:
-						if is_top_wall:
-							if mark_left_wall == 1 or (mark_left_wall == 2 and mark_right_wall == 0):
-								tile_type = 22
-							if mark_right_wall == 1 or (mark_right_wall == 2 and mark_left_wall == 0):
-								tile_type = 23
-						else:
-							if mark_left_wall != 0 and mark_right_wall == 2:
-								tile_type = 24
-							if mark_right_wall != 0 and mark_left_wall == 2:
-								tile_type = 25
+					# Has tile top right
+					if row_index > 0 and col_index < self.num_cols - 1 and temp_map[1][row_index - 1][col_index + 1] != 0:
+						mark_tile_top_right = 1
+					elif row_index == 0 and col_index == self.num_cols - 1:
+						mark_tile_bottom_right = 2
 
-				print(tile_type, row_index, col_index)
+					# Has tile bottom left
+					if row_index < self.num_rows - 1 and col_index > 0 and temp_map[1][row_index + 1][col_index - 1] != 0:
+						mark_tile_bottom_left = 1
+					elif row_index == self.num_rows - 1 and col_index == 0:
+						mark_tile_bottom_left = 2
+
+					# Has tile bottom right
+					if row_index < self.num_rows - 1 and col_index < self.num_cols - 1 and temp_map[1][row_index + 1][col_index + 1] != 0:
+						mark_tile_bottom_right = 1
+					elif row_index == self.num_rows - 1 and col_index == self.num_cols - 1:
+						mark_tile_bottom_right = 2
+
+					match (mark_tile_top, mark_tile_bottom, mark_tile_left, mark_tile_right, mark_tile_top_left, mark_tile_top_right,
+					       mark_tile_bottom_left, mark_tile_bottom_right):
+					# Wall (tile)
+						case (1, *remaining) if not (remaining[1] == 0 and remaining[2] == 2) and not (remaining[1] == 2 and remaining[2] == 0):
+							tile_type = 20
+					# Wall (air)
+						case (0, 0, 1, 1, *corners):
+							tile_type = 21
+						case (0, 0, 1, 0, *corners):
+							tile_type = 21
+						case (0, 0, 0, 1, *corners):
+							tile_type = 21
+						case (0, 0, 0, 0, *corners):
+							tile_type = 21
+						case (0, 1, 1, 1, *corners):
+							tile_type = 21
+						case (0, 1, 1, 0, *corners):
+							tile_type = 21
+						case (0, 1, 0, 1, *corners):
+							tile_type = 21
+						case (0, 1, 0, 0, *corners):
+							tile_type = 21
+						case (0, 2, 1, 1, *corners):
+							tile_type = 21
+						case (0, 2, 1, 0, *corners):
+							tile_type = 21
+						case (0, 2, 0, 1, *corners):
+							tile_type = 21
+						case (0, 2, 0, 0, *corners):
+							tile_type = 21
+					# Wall (void)
+						case (2, 0, 1, 1, *corners):
+							tile_type = 21
+						case (2, 0, 1, 0, *corners):
+							tile_type = 21
+						case (2, 0, 0, 1, *corners):
+							tile_type = 21
+						case (2, 0, 0, 0, *corners):
+							tile_type = 21
+						case (2, 1, 1, 1, *corners):
+							tile_type = 21
+						case (2, 1, 1, 0, *corners):
+							tile_type = 21
+						case (2, 1, 0, 1, *corners):
+							tile_type = 21
+						case (2, 1, 0, 0, *corners):
+							tile_type = 21
+						case (2, 2, 1, 1, *corners):
+							tile_type = 21
+						case (2, 2, 1, 0, *corners):
+							tile_type = 21
+						case (2, 2, 0, 1, *corners):
+							tile_type = 21
+						case (2, 2, 0, 0, *corners):
+							tile_type = 21
+
+					# Top left (tile) Invalid?
+					# case (1, 1, 0, 1, *corners):
+					# 	tile_type = 22
+					# case (1, 1, 2, 1, *corners):
+					# 	tile_type = 22
+					# case (1, 2, 2, 1, *corners):
+					# 	tile_type = 22
+					# Top left (void | air)
+						case (0, 1, 0, 1, *corners):
+							tile_type = 23
+						case (0, 1, 2, 1, *corners):
+							tile_type = 23
+						case (2, 1, 0, 1, *corners):
+							tile_type = 23
+						case (2, 1, 2, 1, *corners):
+							tile_type = 23
+					# Top right (tile) Invalid?
+					# case (1, 1, 1, 0, *corners):
+					# 	tile_type = 24
+					# case (1, 1, 1, 2, *corners):
+					# 	tile_type = 24
+					# case (1, 2, 1, 2, *corners):
+					# 	tile_type = 24
+					# Top right (void | air)
+						case (0, 1, 1, 0, *corners):
+							tile_type = 25
+						case (0, 1, 1, 2, *corners):
+							tile_type = 25
+						case (2, 1, 1, 0, *corners):
+							tile_type = 25
+						case (2, 1, 1, 2, *corners):
+							tile_type = 25
+					# Left
+						case (1, 1, 0, 0, *corners) if corners[3] == 0:
+							tile_type = 26
+						case (1, 1, 1, 0, *corners) if corners[3] == 0:
+							tile_type = 26
+						case (1, 1, 2, 0, *corners) if corners[3] == 0:
+							tile_type = 26
+					# Right
+						case (1, 1, 0, 0, *corners) if corners[2] == 0:
+							tile_type = 27
+						case (1, 1, 0, 1, *corners) if corners[2] == 0:
+							tile_type = 27
+						case (1, 1, 0, 2, *corners) if corners[2] == 0:
+							tile_type = 27
+					# Bottom Left (tile)
+						case (1, 1, 0, 0, *corners) if corners[3] == 1:
+							tile_type = 28
+						case (1, 1, 2, 0, *corners):
+							tile_type = 28
+						case (1, 2, 0, 0, *corners) if corners[3] == 1:
+							tile_type = 28
+						case (1, 2, 2, 0, *corners):
+							tile_type = 28
+					# Bottom Right (tile)
+						case (1, 1, 0, 0, *corners) if corners[2] == 1:
+							tile_type = 29
+						case (1, 1, 0, 2, *corners) if corners[2] == 1:
+							tile_type = 29
+						case (1, 2, 0, 0, *corners) if corners[2] == 1:
+							tile_type = 29
+						case (1, 2, 0, 2, *corners) if corners[2] == 1:
+							tile_type = 29
+					# Catch remaining cases
+						case _:
+							print(f"Wall at row: {row_index} and col: {col_index} is not resolved")
+							tile_type = 0
+
+					# print(tile_type, row_index, col_index, (mark_tile_top, mark_tile_bottom, mark_tile_left, mark_tile_right, mark_tile_top_left,
+					# mark_tile_top_right, mark_tile_bottom_left, mark_tile_bottom_right))
+
+				if tile_type == 0:
+					self.tiles[1][row_index].append(None)
+					continue
+
 				if is_top_wall:
 					self.tiles[1][row_index].append(TopWallTile((col_index * TILE_SIZE, row_index * TILE_SIZE), *tile_mapping[tile_type]))
 				else:
@@ -204,7 +349,7 @@ class Level:
 					tile.draw(surface, camera)
 
 			for entity in sorted_entities[current_entity_index:]:
-				if self.get_tile_pos(entity.pos)[1] != row_index:
+				if self.get_tile_pos((entity.pos.x, entity.pos.y - 1))[1] != row_index:
 					break
 
 				entity.draw(surface, camera)
