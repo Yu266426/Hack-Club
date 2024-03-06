@@ -1,9 +1,9 @@
-from sre_constants import MARK
 import pygame
 import pygbase
 import random
 
 from consts import TILE_SIZE
+from mirror import Mirror
 from tile import Tile, TopWallTile
 
 
@@ -13,19 +13,27 @@ class Level:
 
 		self.num_rows = 0
 		self.num_cols = 0
-		self.tiles: list[list[list[Tile | None]]] = [[], []]
+		self.tiles: list[list[list[Tile | None]]] = [[], []]  # [Floor, Wall]
+		self.mirror_map_bitmask: list[list[int]] = []
 
 		self.load()
 
-	def get_tile_pos(self, pos, offset=(0, 0)):
+	def get_tile_pos(self, pos, offset=(0, 0)) -> tuple[int, int]:
 		return int((pos[0] + offset[0]) // TILE_SIZE), int((pos[1] + offset[1]) // TILE_SIZE)
 
-	def check_bounds(self, tile_pos):
+	def check_bounds(self, tile_pos) -> bool:
 		return 0 <= tile_pos[0] < self.num_cols and 0 <= tile_pos[1] < self.num_rows
 
-	def check_tile_collidable(self, tile_pos, layer=1):
+	def check_tile_collidable(self, tile_pos, layer=1) -> bool:
+		"""Deprecated"""
 		return self.check_bounds(tile_pos) and self.tiles[layer][tile_pos[1]][tile_pos[0]] is not None and self.tiles[layer][tile_pos[1]][
 		    tile_pos[0]].collidable
+
+	def get_tile(self, tile_pos, layer=1) -> Tile | None:
+		if self.check_bounds(tile_pos):
+			return self.tiles[layer][tile_pos[1]][tile_pos[0]]
+		else:
+			return None
 
 	def load(self):
 		tile_mapping = {
@@ -45,10 +53,10 @@ class Level:
 		    23: ("wall_tiles", 0, True, 1),  # Top left
 		    24: ("wall_tiles", 1, True),  # Top right
 		    25: ("wall_tiles", 1, True, 2),  # Top right
-		    26: ("wall_tiles", 2, True),  # Left
-		    27: ("wall_tiles", 3, True),  # Right
-		    28: ("wall_tiles", 4, True),  # Bottom left
-		    29: ("wall_tiles", 5, True),  # Bottom right
+		    26: ("wall_tiles", 2, True, (4, 16)),  # Left
+		    27: ("wall_tiles", 3, True, (4, 16), (12 * 5, 0)),  # Right
+		    28: ("wall_tiles", 4, True, (4, 16)),  # Bottom left
+		    29: ("wall_tiles", 5, True, (4, 16), (12 * 5, 0)),  # Bottom right
 		    210: ("wall_alternates", 0, True),
 		    211: ("wall_alternates", 1, True),
 		    212: ("wall_alternates", 3, True)
@@ -84,8 +92,8 @@ class Level:
 		  [2, 0, 2, 0, 0, 0, 0, 0, 0, 2],
 		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
 		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-		  [2, 2, 0, 0, 0, 0, 0, 0, 0, 2],
-		  [2, 2, 2, 0, 0, 0, 0, 0, 0, 2],
+		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+		  [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
 		  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 		 ]
 		]  # yapf: disable
@@ -198,7 +206,9 @@ class Level:
 					match (mark_tile_top, mark_tile_bottom, mark_tile_left, mark_tile_right, mark_tile_top_left, mark_tile_top_right,
 					       mark_tile_bottom_left, mark_tile_bottom_right):
 					# Wall (tile)
-						case (1, *remaining) if not (remaining[1] == 0 and remaining[2] == 2) and not (remaining[1] == 2 and remaining[2] == 0):
+						case (1,
+						      *remaining) if not (remaining[1] == 0 and remaining[2] == 2) and not (remaining[1] == 2 and remaining[2] == 0) and not (
+						          remaining[0] == 1 and remaining[3] != 1 and remaining[4] != 1 and remaining[5] != 1 and remaining[6] != 1):
 							tile_type = 20
 					# Wall (air)
 						case (0, 0, 1, 1, *corners):
@@ -267,6 +277,10 @@ class Level:
 							tile_type = 23
 						case (2, 1, 2, 1, *corners):
 							tile_type = 23
+						case (1, 1, 0, 1, *corners) if 1 not in corners:
+							tile_type = 22
+						case (1, 1, 2, 1, *corners) if 1 not in corners:
+							tile_type = 22
 					# Top right (tile) Invalid?
 					# case (1, 1, 1, 0, *corners):
 					# 	tile_type = 24
@@ -283,6 +297,8 @@ class Level:
 							tile_type = 25
 						case (2, 1, 1, 2, *corners):
 							tile_type = 25
+						case (1, 1, 1, *remaining) if 1 not in remaining:
+							tile_type = 24
 					# Left
 						case (1, 1, 0, 0, *corners) if corners[3] == 0:
 							tile_type = 26
@@ -296,6 +312,8 @@ class Level:
 						case (1, 1, 0, 1, *corners) if corners[2] == 0:
 							tile_type = 27
 						case (1, 1, 0, 2, *corners) if corners[2] == 0:
+							tile_type = 27
+						case (1, 1, 1, 2, *corners) if corners[2] == 0:
 							tile_type = 27
 					# Bottom Left (tile)
 						case (1, 1, 0, 0, *corners) if corners[3] == 1:
@@ -320,8 +338,8 @@ class Level:
 							print(f"Wall at row: {row_index} and col: {col_index} is not resolved")
 							tile_type = 0
 
-					# print(tile_type, row_index, col_index, (mark_tile_top, mark_tile_bottom, mark_tile_left, mark_tile_right, mark_tile_top_left,
-					# mark_tile_top_right, mark_tile_bottom_left, mark_tile_bottom_right))
+					print(tile_type, row_index, col_index, (mark_tile_top, mark_tile_bottom, mark_tile_left, mark_tile_right, mark_tile_top_left,
+					                                        mark_tile_top_right, mark_tile_bottom_left, mark_tile_bottom_right))
 
 				if tile_type == 0:
 					self.tiles[1][row_index].append(None)
@@ -331,6 +349,9 @@ class Level:
 					self.tiles[1][row_index].append(TopWallTile((col_index * TILE_SIZE, row_index * TILE_SIZE), *tile_mapping[tile_type]))
 				else:
 					self.tiles[1][row_index].append(Tile((col_index * TILE_SIZE, row_index * TILE_SIZE), *tile_mapping[tile_type]))
+
+	def generate_mirror_map(self):
+		pass
 
 	def draw_layer(self, surface: pygame.Surface, camera: pygbase.Camera, layer: int):
 		for row in self.tiles[layer]:
@@ -344,10 +365,6 @@ class Level:
 
 		current_entity_index = 0
 		for row_index, row in enumerate(self.tiles[layer]):
-			for tile in row:
-				if tile:
-					tile.draw(surface, camera)
-
 			for entity in sorted_entities[current_entity_index:]:
 				if self.get_tile_pos((entity.pos.x, entity.pos.y - 1))[1] != row_index:
 					break
@@ -355,6 +372,10 @@ class Level:
 				entity.draw(surface, camera)
 
 				current_entity_index += 1
+
+			for tile in row:
+				if tile:
+					tile.draw(surface, camera)
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		for layer in self.tiles:
