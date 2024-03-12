@@ -11,8 +11,11 @@ class Player:
 		self.movement_speed = 250
 		self.pos = pygame.Vector2(pos)
 
-		self.animations = pygbase.AnimationManager([("idle", pygbase.Animation("sprite_sheets", "player_idle", 0, 2), 2.0),
-		                                            ("run", pygbase.Animation("sprite_sheets", "player_idle", 0, 2), 8.0)], "idle")
+		self.animations = pygbase.AnimationManager([
+			("idle", pygbase.Animation("sprite_sheets", "player_idle", 0, 2), 2.0),
+			("run", pygbase.Animation("sprite_sheets", "player_idle", 0, 2), 8.0)
+		], "idle"
+		)
 		self.flip_x = False
 
 		self.level = level

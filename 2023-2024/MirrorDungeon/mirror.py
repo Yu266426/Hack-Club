@@ -12,4 +12,4 @@ class Mirror:
 
 	@classmethod
 	def get_mirror_bit(cls, value):
-		return 2**value
+		return 2 ** value

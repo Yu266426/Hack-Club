@@ -1,5 +1,4 @@
 import pygame
-from pygame.constants import HIDDEN
 import pygbase
 
 
