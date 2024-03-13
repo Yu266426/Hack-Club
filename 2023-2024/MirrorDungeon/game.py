@@ -11,7 +11,7 @@ class Game(pygbase.GameState, name="game"):
 
 		self.camera = pygbase.Camera()
 
-		self.level = Level("test")
+		self.level = Level(pygbase.Common.get_value("level_name"))
 
 		self.player = Player((400, 400), self.level)
 

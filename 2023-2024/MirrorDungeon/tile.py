@@ -3,7 +3,9 @@ import pygbase
 
 
 class Tile:
-	def __init__(self, pos: tuple, name: str, index: int, collidable: bool, hitbox: tuple = (16, 16), offset: tuple = (0, 0)):
+	def __init__(self, pos: tuple, name: str, index: int, collidable: bool, hitbox: tuple = (16, 16), offset: tuple = (0, 0), autogen_value: int = -1):
+		self.autogen_value = autogen_value
+
 		self.rect = pygame.Rect(pos[0] + offset[0], pos[1] + offset[1], hitbox[0] * 5, hitbox[1] * 5)
 		self.offset = pygame.Vector2(offset)
 
@@ -17,8 +19,8 @@ class Tile:
 
 
 class TopWallTile(Tile):
-	def __init__(self, pos: tuple, name: str, index: int, collidable: bool, top_sprite_index: int):
-		super().__init__(pos, name, index, collidable)
+	def __init__(self, pos: tuple, name: str, index: int, collidable: bool, top_sprite_index: int, autogen_value: int = -1):
+		super().__init__(pos, name, index, collidable, autogen_value=autogen_value)
 
 		self.wall_top_sprite: pygbase.Image = pygbase.ResourceManager.get_resource("sprite_sheets", "wall_top").get_image(top_sprite_index)
 
