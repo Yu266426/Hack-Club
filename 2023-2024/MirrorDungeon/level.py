@@ -56,11 +56,16 @@ class Level:
 		self.tiles: list[list[list[Tile | None]]] = [[], []]  # [Floor, Wall]
 		self.mirror_map_bitmask: list[list[int]] = []
 
+		self.player_spawn_tile_pos: tuple[int, int] = (1, 1)  # Tile pos
+
 		self.load()
 
 	@staticmethod
 	def get_tile_pos(pos, offset=(0, 0)) -> tuple[int, int]:
 		return int((pos[0] + offset[0]) // TILE_SIZE), int((pos[1] + offset[1]) // TILE_SIZE)
+
+	def get_player_spawn_pos(self) -> tuple[float, float]:
+		return self.player_spawn_tile_pos[0] * TILE_SIZE + TILE_SIZE / 2, self.player_spawn_tile_pos[1] * TILE_SIZE + TILE_SIZE
 
 	def check_bounds(self, tile_pos) -> bool:
 		return 0 <= tile_pos[0] < self.num_cols and 0 <= tile_pos[1] < self.num_rows
@@ -93,7 +98,8 @@ class Level:
 					"bottom_right_hole": 0.02,
 					"top_right_hole": 0.02,
 					"top_left_hole": 0.02
-				}
+				},
+				"player_spawn": [1, 1]
 			}
 
 			for col in range(self.num_cols):
@@ -103,6 +109,8 @@ class Level:
 			for row in range(self.num_rows):
 				data["tiles"]["wall"][row][0] = 2
 				data["tiles"]["wall"][row][self.num_cols - 1] = 2
+
+			self.player_spawn_tile_pos = data["player_spawn"]
 
 			# Create new level file
 			with open(file_path, "w") as level_file:
@@ -114,6 +122,8 @@ class Level:
 
 			self.num_cols = data["size"][0]
 			self.num_rows = data["size"][1]
+
+			self.player_spawn_tile_pos = data["player_spawn"]
 
 		floor_tiles: list[list[int]] = data["tiles"]["floor"]
 		wall_tiles: list[list[int]] = data["tiles"]["wall"]
@@ -201,6 +211,8 @@ class Level:
 
 		data["tiles"]["floor"] = floor_tiles
 		data["tiles"]["wall"] = wall_tiles
+
+		data["player_spawn"] = self.player_spawn_tile_pos
 
 		with open(file_path, "w") as level_file:
 			level_file.write(json.dumps(data))
@@ -545,6 +557,8 @@ class Level:
 				for tile in row:
 					if tile is not None:
 						tile.draw(surface, camera)
+
+		pygame.draw.rect(surface, "blue", (camera.world_to_screen((self.player_spawn_tile_pos[0] * TILE_SIZE, self.player_spawn_tile_pos[1] * TILE_SIZE)), (TILE_SIZE, TILE_SIZE)), width=4)
 
 # for row in self.tiles[0]:
 # 	for tile in row:

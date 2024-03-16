@@ -6,10 +6,10 @@ from level import Level
 
 
 class Player:
-	def __init__(self, pos: tuple, level: Level):
+	def __init__(self, level: Level):
 		self.movement_speed = 500
 		self.movement_speed = 250
-		self.pos = pygame.Vector2(pos)
+		self.pos = pygame.Vector2(level.get_player_spawn_pos())
 
 		self.animations = pygbase.AnimationManager([
 			("idle", pygbase.Animation("sprite_sheets", "player_idle", 0, 2), 2.0),

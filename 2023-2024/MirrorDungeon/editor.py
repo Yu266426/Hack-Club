@@ -32,6 +32,9 @@ class Editor(pygbase.GameState, name="editor"):
 		elif pygbase.InputManager.get_mouse_pressed(2):
 			self.level.remove_wall(tile_pos)
 
+		if pygbase.InputManager.get_key_just_pressed(pygame.K_SPACE):
+			self.level.player_spawn_tile_pos = tile_pos
+
 	def draw(self, surface: pygame.Surface):
 		surface.fill("black")
 
