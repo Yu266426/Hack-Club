@@ -1,0 +1,10 @@
+{
+  "left_button": {
+    "scale": 1,
+    "rotatable": false
+  },
+  "right_button": {
+    "scale": 1,
+    "rotatable": false
+  }
+}

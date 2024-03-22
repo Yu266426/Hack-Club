@@ -54,7 +54,9 @@ class Level:
 		self.num_rows = size[1]
 		self.num_cols = size[0]
 		self.tiles: list[list[list[Tile | None]]] = [[], []]  # [Floor, Wall]
-		self.mirror_map_bitmask: list[list[int]] = []
+
+		self.horizontal_mirrors = []
+		self.vertical_mirrors = []
 
 		self.player_spawn_tile_pos: tuple[int, int] = (1, 1)  # Tile pos
 
@@ -523,9 +525,6 @@ class Level:
 					self.tiles[1][current_tile_pos[1]][current_tile_pos[0]] = TopWallTile((current_tile_pos[0] * TILE_SIZE, current_tile_pos[1] * TILE_SIZE), *self.TILE_MAPPING[tile_type], autogen_value=wall_tiles[current_tile_pos[1]][current_tile_pos[0]])
 				else:
 					self.tiles[1][current_tile_pos[1]][current_tile_pos[0]] = Tile((current_tile_pos[0] * TILE_SIZE, current_tile_pos[1] * TILE_SIZE), *self.TILE_MAPPING[tile_type], autogen_value=wall_tiles[current_tile_pos[1]][current_tile_pos[0]])
-
-	def generate_mirror_map(self):
-		pass
 
 	def draw_layer(self, surface: pygame.Surface, camera: pygbase.Camera, layer: int):
 		for row in self.tiles[layer]:
