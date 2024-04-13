@@ -91,7 +91,14 @@ class Editor(pygbase.GameState, name="editor"):
 					self.level.remove_wall(tile_pos)
 
 			elif self.current_mode == EditorModes.MIRROR:
-				pass
+				if pygbase.InputManager.get_mouse_pressed(0):
+					if pygbase.InputManager.check_modifiers(pygame.KMOD_SHIFT):
+						self.level.add_vertical_mirror(tile_pos)
+					else:
+						self.level.add_horizontal_mirror(tile_pos)
+
+				elif pygbase.InputManager.get_mouse_pressed(2):
+					self.level.remove_mirror(tile_pos)
 
 			elif self.current_mode == EditorModes.PLAYER:
 				if self.level.get_tile(tile_pos) is None and pygbase.InputManager.get_mouse_pressed(0):
@@ -101,15 +108,17 @@ class Editor(pygbase.GameState, name="editor"):
 		surface.fill("black")
 
 		self.level.editor_draw(surface, self.camera_controller.camera)
+		self.level.draw_mirrors(surface, self.camera_controller.camera)
 
 		tile_pos = self.level.get_tile_pos(self.camera_controller.camera.screen_to_world(pygame.mouse.get_pos()))
 
 		match self.current_mode:
 			case EditorModes.TILE:
-				is_deleting = pygbase.InputManager.get_mouse_pressed(2)
-				pygame.draw.rect(surface, "red" if is_deleting else "light blue", (
-					self.camera_controller.camera.world_to_screen((tile_pos[0] * TILE_SIZE, tile_pos[1] * TILE_SIZE)), (TILE_SIZE, TILE_SIZE)
-				), width=2)
+				if not self.ui.on_ui():
+					is_deleting = pygbase.InputManager.get_mouse_pressed(2)
+					pygame.draw.rect(surface, "red" if is_deleting else "light blue", (
+						self.camera_controller.camera.world_to_screen((tile_pos[0] * TILE_SIZE, tile_pos[1] * TILE_SIZE)), (TILE_SIZE, TILE_SIZE)
+					), width=2)
 			case EditorModes.MIRROR:
 				pass
 			case EditorModes.PLAYER:

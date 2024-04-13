@@ -6,6 +6,7 @@ from pygbase.resources import json
 
 from consts import TILE_SIZE
 from files import LEVELS_DIR
+from mirror import HorizontalMirror, VerticalMirror
 from tile import Tile, TopWallTile
 
 
@@ -55,7 +56,7 @@ class Level:
 		self.num_cols = size[0]
 		self.tiles: list[list[list[Tile | None]]] = [[], []]  # [Floor, Wall]
 
-		self.horizontal_mirrors = []
+		self.horizontal_mirrors: list[HorizontalMirror] = []
 		self.vertical_mirrors = []
 
 		self.player_spawn_tile_pos: tuple[int, int] = (1, 1)  # Tile pos
@@ -126,6 +127,12 @@ class Level:
 			self.num_rows = data["size"][1]
 
 			self.player_spawn_tile_pos = data["player_spawn"]
+
+			for mirror_data in data["mirrors"]["horizontal"]:
+				self.horizontal_mirrors.append(HorizontalMirror(mirror_data["tile_pos"]))
+
+			for mirror_data in data["mirrors"]["vertical"]:
+				self.vertical_mirrors.append(VerticalMirror(mirror_data["tile_pos"]))
 
 		floor_tiles: list[list[int]] = data["tiles"]["floor"]
 		wall_tiles: list[list[int]] = data["tiles"]["wall"]
@@ -215,6 +222,14 @@ class Level:
 		data["tiles"]["wall"] = wall_tiles
 
 		data["player_spawn"] = self.player_spawn_tile_pos
+
+		data["mirrors"]["horizontal"] = []
+		for mirror in self.horizontal_mirrors:
+			data["mirrors"]["horizontal"].append({"tile_pos": mirror.tile_pos})
+
+		data["mirrors"]["vertical"] = []
+		for mirror in self.vertical_mirrors:
+			data["mirrors"]["vertical"].append({"tile_pos": mirror.tile_pos})
 
 		with open(file_path, "w") as level_file:
 			level_file.write(json.dumps(data))
@@ -526,6 +541,37 @@ class Level:
 				else:
 					self.tiles[1][current_tile_pos[1]][current_tile_pos[0]] = Tile((current_tile_pos[0] * TILE_SIZE, current_tile_pos[1] * TILE_SIZE), *self.TILE_MAPPING[tile_type], autogen_value=wall_tiles[current_tile_pos[1]][current_tile_pos[0]])
 
+	def add_horizontal_mirror(self, tile_pos: tuple[int, int]):
+		for mirror in self.horizontal_mirrors:
+			if mirror.tile_pos == tile_pos:
+				return
+
+		for mirror in self.vertical_mirrors:
+			if mirror.tile_pos == tile_pos:
+				return
+
+		self.horizontal_mirrors.append(HorizontalMirror(tile_pos))
+
+	def add_vertical_mirror(self, tile_pos: tuple[int, int]):
+		for mirror in self.horizontal_mirrors:
+			if mirror.tile_pos == tile_pos:
+				return
+
+		for mirror in self.vertical_mirrors:
+			if mirror.tile_pos == tile_pos:
+				return
+
+		self.vertical_mirrors.append(VerticalMirror(tile_pos))
+
+	def remove_mirror(self, tile_pos: tuple[int, int]):
+		for mirror in self.horizontal_mirrors[:]:
+			if mirror.tile_pos == tile_pos:
+				self.horizontal_mirrors.remove(mirror)
+
+		for mirror in self.vertical_mirrors[:]:
+			if mirror.tile_pos == tile_pos:
+				self.vertical_mirrors.remove(mirror)
+
 	def draw_layer(self, surface: pygame.Surface, camera: pygbase.Camera, layer: int):
 		for row in self.tiles[layer]:
 			for tile in row:
@@ -549,6 +595,13 @@ class Level:
 			for tile in row:
 				if tile:
 					tile.draw(surface, camera)
+
+	def draw_mirrors(self, surface: pygame.Surface, camera: pygbase.Camera):
+		for mirror in self.horizontal_mirrors:
+			mirror.draw(surface, camera)
+
+		for mirror in self.vertical_mirrors:
+			mirror.draw(surface, camera)
 
 	def editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		for layer in self.tiles:

@@ -19,7 +19,6 @@ pygbase.EventManager.add_handler("all", pygame.KEYDOWN, lambda e: pygbase.EventM
 
 args = sys.argv
 num_args = len(args) - 1
-print(args)
 
 if num_args == 0:  # Start game, no args
 	print("Starting Game")

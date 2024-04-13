@@ -24,5 +24,6 @@ class Game(pygbase.GameState, name="game"):
 
 		self.level.draw_layer(surface, self.camera, 0)
 		self.level.draw_layer_with_entities(surface, self.camera, 1, [self.player])
+		self.level.draw_mirrors(surface, self.camera)
 
 # pygame.draw.rect(surface, "white",pygame.Rect(self.camera.world_to_screen((self.player.pos.x - PLAYER_WIDTH / 2, self.player.pos.y - PLAYER_HEIGHT)), (PLAYER_WIDTH, PLAYER_HEIGHT)))
