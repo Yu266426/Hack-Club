@@ -9,6 +9,7 @@ from files import ASSET_DIR
 from game import Game
 
 pygbase.init((800, 800))
+pygbase.DebugDisplay.show()
 
 # Load assets
 pygbase.add_sprite_sheet_resource("sprite_sheets", 1, str(ASSET_DIR / "sprite_sheets"), default_scale=5)

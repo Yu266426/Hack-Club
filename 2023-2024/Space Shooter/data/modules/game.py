@@ -21,7 +21,8 @@ from data.modules.utils import get_angled_offset, get_angle_to
 class Game:
 	def __init__(self):
 		self.is_running = True
-		self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags=pygame.SCALED | pygame.FULLSCREEN, vsync=1)
+		# self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags=pygame.SCALED | pygame.FULLSCREEN, vsync=1)
+		self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags=pygame.SCALED, vsync=1)
 		pygame.display.set_caption("Space Shooter")
 		pygame.display.set_icon(pygame.image.load(os.path.join(ASSET_DIR, "player.png")).convert_alpha())
 		self.clock = pygame.time.Clock()
@@ -163,13 +164,11 @@ class Game:
 			self.player.update(delta, self.scroll)
 
 			if self.player_trail_timer.done():
-				self.spawn_particles(
-					(2, 5),
-					self.player.pos + get_angled_offset(self.player.image.angle + 180, self.player.radius),
-					5,
-					ParticleTypes.PlayerTrail,
-					direction=get_angled_offset(self.player.image.angle + 180, 1)
-				)
+				self.spawn_particles((2, 5),
+									 self.player.pos + get_angled_offset(self.player.image.angle + 180, self.player.radius),
+									 5,
+									 ParticleTypes.PlayerTrail,
+									 direction=get_angled_offset(self.player.image.angle + 180, 1))
 				self.player_trail_timer.start()
 
 		# Update lists
@@ -210,7 +209,10 @@ class Game:
 
 							asteroid_dir = get_angle_to((0, 0), asteroid.movement)
 							for _ in range(1, 3):
-								self.asteroids.append(Asteroid(AsteroidTypes.Medium, asteroid.pos + get_angled_offset(random.randint(0, 360), random.randint(0, asteroid.radius)), asteroid_dir))
+								self.asteroids.append(
+									Asteroid(AsteroidTypes.Medium,
+											 asteroid.pos + get_angled_offset(random.randint(0, 360), random.randint(0, asteroid.radius)),
+											 asteroid_dir))
 
 							self.score += 20
 							self.large_asteroid_explosion_sound.play()
@@ -234,7 +236,11 @@ class Game:
 						self.spawn_particles((300, 400), self.player.pos, self.player.radius, ParticleTypes.PlayerExplosionBlast)
 
 						for _ in range(random.randint(2, 3)):
-							self.spawn_particles((60, 150), self.player.pos, self.player.radius, ParticleTypes.PlayerExplosionArm, direction=get_angled_offset(random.randint(0, 360), 1))
+							self.spawn_particles((60, 150),
+												 self.player.pos,
+												 self.player.radius,
+												 ParticleTypes.PlayerExplosionArm,
+												 direction=get_angled_offset(random.randint(0, 360), 1))
 
 						self.player_explosion_sound.play()
 
@@ -248,7 +254,10 @@ class Game:
 
 							asteroid_dir = get_angle_to((0, 0), asteroid.movement)
 							for _ in range(1, 3):
-								self.asteroids.append(Asteroid(AsteroidTypes.Medium, asteroid.pos + get_angled_offset(random.randint(0, 360), random.randint(0, asteroid.radius)), asteroid_dir))
+								self.asteroids.append(
+									Asteroid(AsteroidTypes.Medium,
+											 asteroid.pos + get_angled_offset(random.randint(0, 360), random.randint(0, asteroid.radius)),
+											 asteroid_dir))
 
 							self.large_asteroid_explosion_sound.play()
 

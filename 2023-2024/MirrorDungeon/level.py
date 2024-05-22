@@ -6,7 +6,8 @@ from pygbase.resources import json
 
 from consts import TILE_SIZE
 from files import LEVELS_DIR
-from mirror import HorizontalMirror, VerticalMirror
+from mirror import HorizontalMirror, VerticalMirror, MirrorType
+from mirror_player import TempMirrorPlayer
 from tile import Tile, TopWallTile
 
 
@@ -57,11 +58,87 @@ class Level:
 		self.tiles: list[list[list[Tile | None]]] = [[], []]  # [Floor, Wall]
 
 		self.horizontal_mirrors: list[HorizontalMirror] = []
-		self.vertical_mirrors = []
+		self.vertical_mirrors: list[VerticalMirror] = []
+
+		self.horizontal_mirror_mask_surf = pygame.Surface(pygbase.Common.get_value("screen_size"), flags=pygame.SRCALPHA)
+		self.vertical_mirror_mask_surf = pygame.Surface(pygbase.Common.get_value("screen_size"), flags=pygame.SRCALPHA)
+		self.horizontal_mirror_mask_tiles = []
+		self.vertical_mirror_mask_tiles = []
+
+		self.horizontal_mirror_entity_surf = pygame.Surface(pygbase.Common.get_value("screen_size"), flags=pygame.SRCALPHA)
+		self.vertical_mirror_entity_surf = pygame.Surface(pygbase.Common.get_value("screen_size"), flags=pygame.SRCALPHA)
 
 		self.player_spawn_tile_pos: tuple[int, int] = (1, 1)  # Tile pos
 
 		self.load()
+
+		self.process_mirrors()
+		print(f"{self.horizontal_mirror_mask_tiles=}")
+
+	def get_colliders(self) -> list[pygame.Rect]:
+		colliders = []
+		for row in self.tiles[1]:
+			for tile in row:
+				if tile is None or not tile.collidable:
+					continue
+
+				colliders.append(tile.rect)
+
+		return colliders
+
+	def process_mirrors(self):
+		for mirror in self.horizontal_mirrors:
+			self.horizontal_mirror_mask_tiles.append(mirror.tile_pos)
+
+			for y in reversed(range(0, mirror.tile_pos[1])):
+				tile_pos = (mirror.tile_pos[0], y)
+				# print(tile_pos)
+
+				self.horizontal_mirror_mask_tiles.append(tile_pos)
+
+				if self.get_tile(tile_pos) is not None:
+					break
+
+			for y in range(mirror.tile_pos[1] + 1, self.num_rows):
+				tile_pos = (mirror.tile_pos[0], y)
+				# print(tile_pos)
+
+				if self.get_tile(tile_pos) is not None:
+					break
+				self.horizontal_mirror_mask_tiles.append(tile_pos)
+
+		for mirror in self.vertical_mirrors:
+			self.vertical_mirror_mask_tiles.append(mirror.tile_pos)
+
+			for x in reversed(range(0, mirror.tile_pos[0])):
+				tile_pos = (x, mirror.tile_pos[1])
+
+				self.vertical_mirror_mask_tiles.append(tile_pos)
+				if self.get_tile(tile_pos) is not None:
+					break
+
+			for x in range(mirror.tile_pos[0] + 1, self.num_cols):
+				tile_pos = (x, mirror.tile_pos[1])
+
+				self.vertical_mirror_mask_tiles.append(tile_pos)
+				if self.get_tile(tile_pos) is not None:
+					break
+
+		for mirror in self.horizontal_mirrors:
+			for other_mirror in self.horizontal_mirrors:
+				if mirror is not other_mirror:
+					if abs(mirror.tile_pos[0] - other_mirror.tile_pos[0]) == 1:
+						mirror.adjacent.append(other_mirror)
+
+		for mirror in self.vertical_mirrors:
+			for other_mirror in self.vertical_mirrors:
+				if mirror is not other_mirror:
+					if abs(mirror.tile_pos[1] - other_mirror.tile_pos[1]) == 1:
+						mirror.adjacent.append(other_mirror)
+
+		for mirror in self.vertical_mirrors:
+			adjacent = [adjacent_mirror.tile_pos for adjacent_mirror in mirror.adjacent]
+			print(f"{mirror.tile_pos}: {adjacent}")
 
 	@staticmethod
 	def get_tile_pos(pos, offset=(0, 0)) -> tuple[int, int]:
@@ -72,11 +149,6 @@ class Level:
 
 	def check_bounds(self, tile_pos) -> bool:
 		return 0 <= tile_pos[0] < self.num_cols and 0 <= tile_pos[1] < self.num_rows
-
-	def check_tile_collidable(self, tile_pos, layer=1) -> bool:
-		"""Deprecated"""
-		return self.check_bounds(tile_pos) and self.tiles[layer][tile_pos[1]][tile_pos[0]] is not None and self.tiles[layer][tile_pos[1]][
-			tile_pos[0]].collidable
 
 	def get_tile(self, tile_pos, layer=1) -> Tile | None:
 		if self.check_bounds(tile_pos):
@@ -572,15 +644,34 @@ class Level:
 			if mirror.tile_pos == tile_pos:
 				self.vertical_mirrors.remove(mirror)
 
+	def render_mirror_mask(self, camera: pygbase.Camera):
+		# self.mirror_mask_surf.fill((0, 0, 0, 0))
+		self.horizontal_mirror_mask_surf.fill((255, 255, 255, 255))
+		self.vertical_mirror_mask_surf.fill((255, 255, 255, 255))
+
+		# print(self.horizontal_mirror_mask_tiles)
+		for tile in self.horizontal_mirror_mask_tiles:
+			pos = tile[0] * TILE_SIZE, tile[1] * TILE_SIZE
+			pygame.draw.rect(self.horizontal_mirror_mask_surf, (0, 0, 0, 0), (camera.world_to_screen(pos), (TILE_SIZE, TILE_SIZE)))
+
+		for tile in self.vertical_mirror_mask_tiles:
+			pos = tile[0] * TILE_SIZE, tile[1] * TILE_SIZE
+			pygame.draw.rect(self.vertical_mirror_mask_surf, (0, 0, 0, 0), (camera.world_to_screen(pos), (TILE_SIZE, TILE_SIZE)))
+
 	def draw_layer(self, surface: pygame.Surface, camera: pygbase.Camera, layer: int):
 		for row in self.tiles[layer]:
 			for tile in row:
 				if tile:
 					tile.draw(surface, camera)
 
-	def draw_layer_with_entities(self, surface: pygame.Surface, camera: pygbase.Camera, layer: int, entities: list):
+	def draw_layer_with_entities(self, surface: pygame.Surface, camera: pygbase.Camera, layer: int, entities: list, mirror_entities: list[TempMirrorPlayer]):
+		if len(mirror_entities) != 0:
+			self.render_mirror_mask(camera)
+			# surface.blit(self.vertical_mirror_mask_surf, (0, 0))
+
 		# Sort entities
 		sorted_entities = sorted(entities, key=lambda e: e.pos.y * self.num_cols * self.TILE_SIZE + e.pos.x)
+		sorted_mirror_entities = sorted(mirror_entities, key=lambda e: e.from_mirror_type)
 
 		current_entity_index = 0
 		for row_index, row in enumerate(self.tiles[layer]):
@@ -595,6 +686,24 @@ class Level:
 			for tile in row:
 				if tile:
 					tile.draw(surface, camera)
+
+		mirror_entity_next_index = len(sorted_mirror_entities)
+		self.horizontal_mirror_entity_surf.fill((0, 0, 0, 0))
+		for index, mirror_entity in enumerate(sorted_mirror_entities):
+			if mirror_entity.from_mirror_type == MirrorType.VERTICAL:
+				mirror_entity_next_index = index
+				break
+
+			mirror_entity.draw(self.horizontal_mirror_entity_surf, camera)
+		self.horizontal_mirror_entity_surf.blit(self.horizontal_mirror_mask_surf, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
+
+		self.vertical_mirror_entity_surf.fill((0, 0, 0, 0))
+		for mirror_entity in sorted_mirror_entities[mirror_entity_next_index:]:
+			mirror_entity.draw(self.vertical_mirror_entity_surf, camera)
+		self.vertical_mirror_entity_surf.blit(self.vertical_mirror_mask_surf, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
+
+		surface.blit(self.horizontal_mirror_entity_surf, (0, 0))
+		surface.blit(self.vertical_mirror_entity_surf, (0, 0))
 
 	def draw_mirrors(self, surface: pygame.Surface, camera: pygbase.Camera):
 		for mirror in self.horizontal_mirrors:
@@ -611,226 +720,3 @@ class Level:
 						tile.draw(surface, camera)
 
 		pygame.draw.rect(surface, "blue", (camera.world_to_screen((self.player_spawn_tile_pos[0] * TILE_SIZE, self.player_spawn_tile_pos[1] * TILE_SIZE)), (TILE_SIZE, TILE_SIZE)), width=4)
-
-# for row in self.tiles[0]:
-# 	for tile in row:
-# 		if tile:
-# 			tile.draw(surface, camera)
-#
-# tile_mapping = {
-# 	# 1 is used to mark procedural floors
-# 	10: ("floor_tiles", 0, False),
-# 	11: ("floor_tiles", 1, False),
-# 	12: ("floor_tiles", 2, False),
-# 	13: ("floor_tiles", 3, False),
-# 	14: ("floor_tiles", 4, False),
-# 	15: ("floor_tiles", 5, False),
-# 	16: ("floor_tiles", 6, False),
-# 	17: ("floor_tiles", 7, False),
-# 	# 2 is used to mark procedural walls
-# 	20: ("wall_tiles", 6, True),
-# 	21: ("wall_tiles", 6, True, 0),
-# 	22: ("wall_tiles", 0, True),  # Top left
-# 	23: ("wall_tiles", 0, True, 1),  # Top left
-# 	24: ("wall_tiles", 1, True),  # Top right
-# 	25: ("wall_tiles", 1, True, 2),  # Top right
-# 	26: ("wall_tiles", 2, True, (4, 16)),  # Left
-# 	27: ("wall_tiles", 3, True, (4, 16), (12 * 5, 0)),  # Right
-# 	28: ("wall_tiles", 4, True, (4, 16)),  # Bottom left
-# 	29: ("wall_tiles", 5, True, (4, 16), (12 * 5, 0)),  # Bottom right
-# 	210: ("wall_alternates", 0, True),
-# 	211: ("wall_alternates", 1, True),
-# 	212: ("wall_alternates", 3, True)
-# }
-# for row_index, row in enumerate(self.tiles[1]):
-# 	for col_index, tile in enumerate(row):
-# 		tile_type = 2 if tile is not None else 0
-# 		is_top_wall = True
-#
-# 		if tile_type == 2:
-# 			mark_tile_top = 0
-# 			mark_tile_bottom = 0
-# 			mark_tile_left = 0
-# 			mark_tile_right = 0
-#
-# 			mark_tile_top_left = 0
-# 			mark_tile_top_right = 0
-# 			mark_tile_bottom_left = 0
-# 			mark_tile_bottom_right = 0
-#
-# 			# Has tile on top
-# 			if row_index > 0 and self.tiles[1][row_index - 1][col_index] is not None:
-# 				is_top_wall = False
-# 				mark_tile_top = 1
-# 			elif row_index == 0:
-# 				mark_tile_top = 2
-#
-# 			# Has tile below
-# 			if row_index < self.num_rows - 1 and self.tiles[1][row_index + 1][col_index] is not None:
-# 				mark_tile_bottom = 1
-# 			elif row_index == self.num_rows - 1:
-# 				mark_tile_bottom = 2
-#
-# 			# Has tile to the left
-# 			if col_index > 0 and self.tiles[1][row_index][col_index - 1] is not None:
-# 				mark_tile_left = 1
-# 			elif col_index == 0:
-# 				mark_tile_left = 2
-#
-# 			# Has tile to the right
-# 			if col_index < self.num_cols - 1 and self.tiles[1][row_index][col_index + 1] is not None:
-# 				mark_tile_right = 1
-# 			elif col_index == self.num_cols - 1:
-# 				mark_tile_right = 2
-#
-# 			# Has tile top left
-# 			if row_index > 0 and col_index > 0 and self.tiles[1][row_index - 1][col_index - 1] is not None:
-# 				mark_tile_top_left = 1
-# 			elif row_index == 0 and col_index == 0:
-# 				mark_tile_top_left = 2
-#
-# 			# Has tile top right
-# 			if row_index > 0 and col_index < self.num_cols - 1 and self.tiles[1][row_index - 1][col_index + 1] is not None:
-# 				mark_tile_top_right = 1
-# 			elif row_index == 0 and col_index == self.num_cols - 1:
-# 				mark_tile_bottom_right = 2
-#
-# 			# Has tile bottom left
-# 			if row_index < self.num_rows - 1 and col_index > 0 and self.tiles[1][row_index + 1][col_index - 1] is not None:
-# 				mark_tile_bottom_left = 1
-# 			elif row_index == self.num_rows - 1 and col_index == 0:
-# 				mark_tile_bottom_left = 2
-#
-# 			# Has tile bottom right
-# 			if row_index < self.num_rows - 1 and col_index < self.num_cols - 1 and self.tiles[1][row_index + 1][col_index + 1] is not None:
-# 				mark_tile_bottom_right = 1
-# 			elif row_index == self.num_rows - 1 and col_index == self.num_cols - 1:
-# 				mark_tile_bottom_right = 2
-#
-# 			match (
-# 				mark_tile_top, mark_tile_bottom, mark_tile_left, mark_tile_right,
-# 				mark_tile_top_left, mark_tile_top_right, mark_tile_bottom_left, mark_tile_bottom_right
-# 			):
-# 				# Wall (tile)
-# 				case (1, *remaining) if not (remaining[1] == 0 and remaining[2] == 2) and not (remaining[1] == 2 and remaining[2] == 0) and not (
-# 						remaining[0] == 1 and remaining[3] != 1 and remaining[4] != 1 and remaining[5] != 1 and remaining[6] != 1
-# 				):
-# 					tile_type = 20
-# 				# Wall (air)
-# 				case (0, 0, 1, 1, *_):
-# 					tile_type = 21
-# 				case (0, 0, 1, 0, *_):
-# 					tile_type = 21
-# 				case (0, 0, 0, 1, *_):
-# 					tile_type = 21
-# 				case (0, 0, 0, 0, *_):
-# 					tile_type = 21
-# 				case (0, 1, 1, 1, *_):
-# 					tile_type = 21
-# 				case (0, 1, 1, 0, *_):
-# 					tile_type = 21
-# 				case (0, 1, 0, 1, *_):
-# 					tile_type = 21
-# 				case (0, 1, 0, 0, *_):
-# 					tile_type = 21
-# 				case (0, 2, 1, 1, *_):
-# 					tile_type = 21
-# 				case (0, 2, 1, 0, *_):
-# 					tile_type = 21
-# 				case (0, 2, 0, 1, *_):
-# 					tile_type = 21
-# 				case (0, 2, 0, 0, *_):
-# 					tile_type = 21
-# 				# Wall (void)
-# 				case (2, 0, 1, 1, *_):
-# 					tile_type = 21
-# 				case (2, 0, 1, 0, *_):
-# 					tile_type = 21
-# 				case (2, 0, 0, 1, *_):
-# 					tile_type = 21
-# 				case (2, 0, 0, 0, *_):
-# 					tile_type = 21
-# 				case (2, 1, 1, 1, *_):
-# 					tile_type = 21
-# 				case (2, 1, 1, 0, *_):
-# 					tile_type = 21
-# 				case (2, 1, 0, 1, *_):
-# 					tile_type = 21
-# 				case (2, 1, 0, 0, *_):
-# 					tile_type = 21
-# 				case (2, 2, 1, 1, *_):
-# 					tile_type = 21
-# 				case (2, 2, 1, 0, *_):
-# 					tile_type = 21
-# 				case (2, 2, 0, 1, *_):
-# 					tile_type = 21
-# 				case (2, 2, 0, 0, *_):
-# 					tile_type = 21
-# 				case (0, 1, 0, 1, *_):
-# 					tile_type = 23
-# 				case (0, 1, 2, 1, *_):
-# 					tile_type = 23
-# 				case (2, 1, 0, 1, *_):
-# 					tile_type = 23
-# 				case (2, 1, 2, 1, *_):
-# 					tile_type = 23
-# 				case (1, 1, 0, 1, *corners) if 1 not in corners:
-# 					tile_type = 22
-# 				case (1, 1, 2, 1, *corners) if 1 not in corners:
-# 					tile_type = 22
-# 				case (0, 1, 1, 0, *_):
-# 					tile_type = 25
-# 				case (0, 1, 1, 2, *_):
-# 					tile_type = 25
-# 				case (2, 1, 1, 0, *_):
-# 					tile_type = 25
-# 				case (2, 1, 1, 2, *_):
-# 					tile_type = 25
-# 				case (1, 1, 1, *remaining) if 1 not in remaining:
-# 					tile_type = 24
-# 				# Left
-# 				case (1, 1, 0, 0, *corners) if corners[3] == 0:
-# 					tile_type = 26
-# 				case (1, 1, 1, 0, *corners) if corners[3] == 0:
-# 					tile_type = 26
-# 				case (1, 1, 2, 0, *corners) if corners[3] == 0:
-# 					tile_type = 26
-# 				# Right
-# 				case (1, 1, 0, 0, *corners) if corners[2] == 0:
-# 					tile_type = 27
-# 				case (1, 1, 0, 1, *corners) if corners[2] == 0:
-# 					tile_type = 27
-# 				case (1, 1, 0, 2, *corners) if corners[2] == 0:
-# 					tile_type = 27
-# 				case (1, 1, 1, 2, *corners) if corners[2] == 0:
-# 					tile_type = 27
-# 				# Bottom Left (tile)
-# 				case (1, 1, 0, 0, *corners) if corners[3] == 1:
-# 					tile_type = 28
-# 				case (1, 1, 2, 0, *_):
-# 					tile_type = 28
-# 				case (1, 2, 0, 0, *corners) if corners[3] == 1:
-# 					tile_type = 28
-# 				case (1, 2, 2, 0, *_):
-# 					tile_type = 28
-# 				# Bottom Right (tile)
-# 				case (1, 1, 0, 0, *corners) if corners[2] == 1:
-# 					tile_type = 29
-# 				case (1, 1, 0, 2, *corners) if corners[2] == 1:
-# 					tile_type = 29
-# 				case (1, 2, 0, 0, *corners) if corners[2] == 1:
-# 					tile_type = 29
-# 				case (1, 2, 0, 2, *corners) if corners[2] == 1:
-# 					tile_type = 29
-# 				# Catch remaining cases
-# 				case _:
-# 					print(f"Wall at row: {row_index} and col: {col_index} is not resolved")
-# 					tile_type = 0
-#
-# 		if tile_type == 0:
-# 			continue
-#
-# 		if is_top_wall:
-# 			TopWallTile((col_index * TILE_SIZE, row_index * TILE_SIZE), *tile_mapping[tile_type]).draw(surface, camera)
-# 		else:
-# 			Tile((col_index * TILE_SIZE, row_index * TILE_SIZE), *tile_mapping[tile_type]).draw(surface, camera)
